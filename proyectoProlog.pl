@@ -4,25 +4,61 @@
 
 %Pokemons
 % (Id, Nombre, Tipo, Fuerza, Estado, EXP)
+%fuego
 pokemon(1, charmander, fuego, 10, normal, 0).
 pokemon(2, charmeleon, fuego, 20, normal, 100).
 pokemon(3, charizard, fuego, 30, normal, 200).
-pokemon(4, squirtle, agua, 9, normal, 0).
-pokemon(5, wartortle, agua, 19, normal, 100).
-pokemon(6, blastoise, agua, 30, normal, 190).
-pokemon(7, bulbasaur, planta, 8, normal, 0).
-pokemon(8, ivysaur, planta, 18, normal, 80).
-pokemon(9, venasaur, planta, 29, normal, 190).
-pokemon(10, pikachu, electrico, 13, normal, 0).
-pokemon(11, raichu, electrico, 29, normal, 150).
-pokemon(12, voltrob, electrico, 12, normal, 0).
-pokemon(13, electrode, electrico, 27, normal, 130).
+
+pokemon(4, bulpix, fuego, 10, normal, 0).
+pokemon(5, nineTails, fuego, 25, normal, 150).
+
+pokemon(6, growlithe, fuego, 10, normal, 0).
+pokemon(7, arcanine, fuego, 25, normal, 250).
+
+%agua
+pokemon(8, squirtle, agua, 9, normal, 0).
+pokemon(9, wartortle, agua, 19, normal, 100).
+pokemon(10, blastoise, agua, 30, normal, 190).
+
+pokemon(11, marril, agua, 7, normal, 0).
+pokemon(12, azulMarril, agua, 16, normal, 140).
+
+pokemon(13, magikarp, agua, 1, normal, 0).
+pokemon(14, giaradous, agua, 28, normal, 250).
+
+%planta
+pokemon(15, bulbasaur, planta, 8, normal, 0).
+pokemon(16, ivysaur, planta, 18, normal, 80).
+pokemon(17, venasaur, planta, 29, normal, 190).
+
+pokemon(18, bellsprout, planta, 9, normal, 0).
+pokemon(19, weepinbell, planta, 18, normal, 120).
+pokemon(20, victreebel, planta, 26, normal, 240).
+
+pokemon(21, chikorita, planta, 10, normal, 0).
+pokemon(22, bayleef, planta, 20, normal, 90).
+pokemon(23, meganium, planta, 30, normal, 190).
+
+%electrico
+pokemon(24, pikachu, electrico, 13, normal, 0).
+pokemon(25, raichu, electrico, 29, normal, 150).
+
+pokemon(26, voltrob, electrico, 12, normal, 0).
+pokemon(27, electrode, electrico, 27, normal, 130).
+
+pokemon(28, electrode, electrico, 27, normal, 130).
+
+%normal
 pokemon(14, rattata, normal, 12, normal, 0).
 pokemon(15, raticate, normal, 25, normal, 90).
 pokemon(16, meowth, normal, 13, normal, 0).
 pokemon(17, persian, normal, 28, normal, 120).
 pokemon(18, snorlax, normal, 30, normal, 0).
 
+
+printEvoluciones():-
+  forall(evolucion(X, Y, Z),
+  (write("pokemon: "), write(X), write(" evoluciona a: "), write(Y), write( " con experiencia: "), write(Z), nl)).  
 
 % (Pokemon, Evolucion, EXP)
 
@@ -50,22 +86,32 @@ tipo(planta).
 tipo(normal).
 tipo(electrico).
 
-%(nombre, poder, usos)
-
-ataque(lanzallamas, 10, 8).
-ataque(ascuas, 6, 15).
-ataque(pistolaAgua, 9, 10).
-ataque(burbujas, 6, 15).
-ataque(latigoCepa, 9, 12).
-ataque(hojasNavajas, 5, 15).
-ataque(trueno, 10, 8).
-ataque(chispa, 5, 13).
-ataque(placaje, 6, 15).
-ataque(aranazo, 6, 15).
-ataque(hiperrayo, 10, 8).
-ataque(cabezazo, 7, 10).
-
-%ataques(charmander, ascuas, lanzallamas).
+%(nombre, poder, tipoPokemon)
+%fuego
+ataque(lanzallamas, 9, fuego).
+ataque(ascuas, 6, fuego).
+ataque(patadaIgnea, 7, fuego).
+ataque(llamarada, 10, fuego).
+%agua
+ataque(pistolaAgua, 7, agua).
+ataque(burbujas, 6, agua).
+ataque(surf, 8, agua).
+ataque(hidrobomba, 10, agua).
+%planta
+ataque(latigoCepa, 4, planta).
+ataque(hojasNavajas, 7, planta).
+ataque(rayoSolar, 10, planta).
+ataque(semillas, 6, planta).
+%electrico
+ataque(trueno, 10, electrico).
+ataque(chispa, 5, electrico).
+ataque(rayo, 9, electrico).
+ataque(impactrueno, 7, electrico).
+%normal
+ataque(placaje, 6, normal).
+ataque(aranazo, 6, normal).
+ataque(hiperrayo, 10, normal).
+ataque(cabezazo, 7, normal).
 
 % (Tipo, KM)
 
@@ -77,7 +123,6 @@ kmHuevo(electrico, 5).
 
 huevo(Tipo, X) :-
     kmHuevo(Tipo, X).
-
 
 %Pokemochila
 pokemochila(pokemons).
@@ -173,13 +218,13 @@ menuPrincipalController(X):-
         menuItemPokemons;
     (X = 2) -> 
         write("Menu Pokemochila");
-    (X = 3) -> 
+    (X = 3) ->
         write("Menu Medallas");
-    (X = 4) -> 
+    (X = 4) ->
         menuInfo;
     (X = 5) ->
         write("Saliendo del menu");
-    ((X < 1); (X > 5)) -> 
+    ((X < 1); (X > 5)) ->
         vuelveAIntentar(Y),
         menuPrincipalController(Y)
 ).
@@ -224,7 +269,7 @@ menuPokemonController(P, X) :-
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
     ).
-    
+
 
 %Param(Lista, 0)
 
