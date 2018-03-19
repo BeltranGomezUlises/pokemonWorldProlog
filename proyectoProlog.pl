@@ -170,7 +170,7 @@ menuItemHuevos :-
 
 menuPrincipalController(X):- 
 (   (X = 1) -> 
-        write("Menu Pokemons");
+        menuItemPokemons;
     (X = 2) -> 
         write("Menu Pokemochila");
     (X = 3) -> 
@@ -198,17 +198,21 @@ menuInfoController(X) :-
         menuInfoController(Y)
 ).
 
+menuInfoPokemon :-
+    write("----- Evoluciones Pokemon ------"), nl,
+    
+
 menuItemPokemons :-
     write("----- Mis Pokemons ------"), nl,
     misPokemon(P),
-    obtenerListaPokemons(P, 0),
-    write("Obtener info sobre: "),
+    obtenerListaNumerada(P, 0),
+    write("Obtener info sobre: "), nl,
     read(X), menuPokemonController(P, X).
 
 menuPokemonController(P, X) :-
     numPokemons(N),
     (
-        ((X > 0); (X < N)) ->
+        ((X > 0), (X < N + 1)) ->
             getElement(P, X, R),
             pokemon(_, R, Tipo, _, Estado, Exp),
             write("Nombre: "), write(R), nl,
@@ -216,17 +220,19 @@ menuPokemonController(P, X) :-
             write("Estado: "), write(Estado), nl,
             write("Exp: "), write(Exp);
         ((X < 1); (X > N)) ->
+            write("No"),
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
     ).
     
 
+%Param(Lista, 0)
 
-obtenerListaPokemons([], _).
-obtenerListaPokemons([X | T], C):-
+obtenerListaNumerada([], _).
+obtenerListaNumerada([X | T], C):-
     C1 is C + 1,
     write(C1), write(".- "), write(X), nl,
-    obtenerListaPokemons(T, C1).
+    obtenerListaNumerada(T, C1).
 
 
 misPokemon([]).
@@ -242,7 +248,7 @@ agregarPokemon(Pokemon) :-
 
 vuelveAIntentar(Y) :-
     write("Valor invalido, vuelva a intentarlo."), nl,
-        read(Y).
+    read(Y).
 
 primerPokemon :-
     write("Elige tu primer Pokemon: "),nl,
@@ -272,14 +278,14 @@ menuBatalla :-
     read(X), batallaController(X).
 
 batallaController(X) :-
-(
-    (X = 1) ->
-        write("Ataque");
-    (X = 2) ->
-         write("Cambiar");
-    (X = 3) ->
-         write("");
-    ((X < 1); (X > 3)) ->
-        vuelveAIntentar(Y),
-        batallaController(Y)
-).
+    (
+        (X = 1) ->
+            write("Ataque");
+        (X = 2) ->
+            write("Cambiar");
+        (X = 3) ->
+            write("");
+        ((X < 1); (X > 3)) ->
+            vuelveAIntentar(Y),
+            batallaController(Y)
+    ).
