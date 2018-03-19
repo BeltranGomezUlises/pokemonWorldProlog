@@ -334,3 +334,13 @@ batallaController(X) :-
             vuelveAIntentar(Y),
             batallaController(Y)
     ).
+
+/* Largo de una lista */
+len([],0). 
+len([_|T],N)  :-  len(T,X),  N  is  X+1.
+
+%retorna el elemnto n de una lista
+getElement([X|_], 1, X).
+getElement([_|T], N, X):-
+          N2 is N - 1,
+          getElement(T, N2, X).
