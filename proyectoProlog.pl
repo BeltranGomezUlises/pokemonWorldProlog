@@ -41,11 +41,11 @@ pokemon(27, electrode, electrico, 27, normal, 130).
 pokemon(28, electabuzz, electrico, 27, normal, 0).
 
 %normal
-pokemon(14, rattata, normal, 12, normal, 0).
-pokemon(15, raticate, normal, 25, normal, 90).
-pokemon(16, meowth, normal, 13, normal, 0).
-pokemon(17, persian, normal, 28, normal, 120).
-pokemon(18, snorlax, normal, 30, normal, 0).
+pokemon(29, rattata, normal, 12, normal, 0).
+pokemon(30, raticate, normal, 25, normal, 90).
+pokemon(31, meowth, normal, 13, normal, 0).
+pokemon(32, persian, normal, 28, normal, 120).
+pokemon(33, snorlax, normal, 30, normal, 0).
 
 %imprime las posibles evoluciones
 printEvoluciones:-
@@ -516,32 +516,54 @@ menuEnfermeriaController(X) :-
 /*crear un equipo de pokemones para el contrincante*/
 
 :- dynamic batallaTerminada/1.
-batallaTerminada(no).
 
-pelear:- asserta(batallaTerminada(no)), pelea(0).
+inicializarPeleador:-
+  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3), random(1, 33, X4),
+  pokemon(X1, Pokemon1, _, _, _, _),
+  pokemon(X2, Pokemon2, _, _, _, _),
+  pokemon(X3, Pokemon3, _, _, _, _),
+  pokemon(X4, Pokemon4, _, _, _, _),
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 100],
+      [Pokemon2, normal, 100],
+      [Pokemon3, normal, 100],
+      [Pokemon4, normal, 100]
+    ])
+  ).
+
+printPokemonesPeleador:- write("Pokemones del pc: \n"), pcPokemones(X), obtenerListaNumerada(X, 0), nl.
+
+pelear:- asserta(batallaTerminada(no)), inicializarPeleador, printPokemonesPeleador, pelea(0).
 pelea(DanioInicial):- batallaTerminada(no),
   peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), pelea(DanioGeneradoPC).
 pelea(X):- write("batalla terminada").
 
-peleaPC(DanioInicial, DanioGenerado):- write("turno maquina").
+peleaPC(DanioInicial, DanioGenerado):- batallaTerminada(no), write("turno maquina"), DanioGenerado is 5.
 
 nombrePokemon([Nombre|_], Nombre).
 estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
 
-peleoYo(DanioInicial, DanioGenerado):-
+peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
           misPokemon([Pokemon|_]), %obtener en H el primer pokemon, reemplazar funcion por obtener pokemon a pelear
           vidaPokemon(Pokemon, VidaPokemon),
           nombrePokemon(Pokemon, NombrePokemon),
+          estadoPokemon(Pokemon, EstadoPokemon),
+          NuevaVidaPokemon is VidaPokemon - DanioInicial,
+          misPokemon(MisPokemones),
+          actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon], MisPokemones, NuevosPokemones),
+          retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
           write("tu pokemon es: "), write(NombrePokemon), nl,
-          write("tiene de vida: "), write(VidaPokemon), write(", sus ataque son: \n"),
+          write("tiene de vida: "), write(NuevaVidaPokemon), write(", sus ataque son: \n"),
           pokemonAtaque(NombrePokemon, L), write("\n elige uno: \n"),
           obtenerListaNumerada(L, 0),
           read(X),
           elegirAtaque(X, NombrePokemon, Ataque),
-          ataque(Ataque, Dano, _),
+          ataque(Ataque, DanioGenerado, _),
           write("elegiste: "), write(Ataque), nl,
-          write("realizaste de danio: "), write(Dano), nl.
+          write("realizaste de danio: "), write(DanioGenerado), nl.
 
 elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
   (
@@ -550,3 +572,11 @@ elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
     (Indice = 3) -> pokemonAtaque(NombrePokemon, [_, _, AtaqueElegido|_] );
     (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] ), retractall(batallaTerminada(no))
   ).
+
+replaceAll(_, _, [], []).
+replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
+replaceAll(O, R, [H|T], [H|T2]) :- H \= O, replaceAll(O, R, T, T2).
+
+actualizarPokemon(_, [],[]).
+actualizarPokemon([PN,ES, DN], [[P, PES, PDN]|T], [[P, PES, PDN]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN], T, T2).
+actualizarPokemon([PN,ES, DN], [[PN, _, _]|T], [[PN, ES, DN]|T2]):- actualizarPokemon([PN,ES, DN], T, T2).
