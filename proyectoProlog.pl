@@ -147,17 +147,25 @@ pokemochila(medallas).
 pokemochila(dinero).
 pokemochila(pokebolas).
 
-pokebola(pokeball).
-pokebola(superball).
-pokebola(ultraball).
-pokebola(masterball).
+%Pokebolas(nombre, cantidadObtenidas)
+pokebola(pokeball, 5).
+pokebola(superball, 0).
+pokebola(ultraball, 0).
+pokebola(masterball, 0).
 
-medalla(puno).
-medalla(tallo).
-medalla(lluvia).
-medalla(relampago).
-medalla(volcan).
-medalla(arcoiris).
+%Medallas(nombre, ganada)
+medalla(ninguna, si).
+medalla(puno, no).
+medalla(tallo, no).
+medalla(lluvia, no).
+medalla(relampago, no).
+medalla(volcan, no).
+medalla(arcoiris, no).
+
+dinero(100).
+
+%PC 
+
 
 %Ciudades
 
@@ -169,7 +177,11 @@ ciudadPokemon(5, celeste).
 ciudadPokemon(6, lavanda).
 ciudadPokemon(7, carmin).
 
-ciudadSiguiente(X, Y):- X1 is X + 1, ciudadPokemon(X1, Y).
+ciudadAnterior(1, paleta).
+ciudadSiguiente(X, Y):- 
+    ciudadAnterior(X, _),
+    X1 is X + 1, 
+    ciudadPokemon(X1, Y).
 
 distanciaCiudades(paleta, verde, 5).
 distanciaCiudades(verde, azulona, 10).
@@ -182,21 +194,23 @@ distanciaCiudades(lavanda, carmin, 15).
 
 precio(pokeball, 10).
 precio(superball, 15).
-precio(ultraball, 20).
+precio(ultraball, 25).
+precio(masterball, 100).
 
 mostrarMenu :-
     write("*** PokeMenu ***"), nl,
     write("1.- Pokemons"), nl,
     write("2.- Pokemochila"), nl,
-    write("3.- Medallas"), nl,
+    write("3.- Ficha de Entrenador"), nl,
     write("4.- Info"), nl,
+    write("5.- Salir"), nl,
     write("¿Que deseas hacer? (Numero)"), nl,
     read(X), menuPrincipalController(X).
 
 menuInfo :-
     write("--- Informacion ---"), nl,
     write("1.- Pokebolas"), nl,
-    write("2.- Pokemons"), nl,
+    write("2.- Evoluciones"), nl,
     write("3.- Huevos"), nl,
     write("4.- Ciudades"), nl,
     write("5.- Salir"), nl,
@@ -206,9 +220,9 @@ menuInfo :-
 menuItemPokebolas :-
     write("----- Pokebolas -----"), nl,
     write(" Tipo         Precio"), nl,
-    write("Pokebola   10 pokes"), nl,
-    write("Superball   15 pokes "), nl,
-    write("Ultraball    20 pokes ").
+    forall(precio(Nombre, Precio),
+    (write("-"), write(Nombre), write("\t"), write(Precio), write(" pokes"), nl)).
+    
 
 menuItemCiudades :-
     write("----- Ciudades ------"), nl,
@@ -232,24 +246,40 @@ menuItemHuevos :-
 menuPrincipalController(X):-
 (   (X = 1) ->
         menuItemPokemons;
-    (X = 2) ->
-        write("Menu Pokemochila");
+    (X = 2) -> 
+        menuPokemochila;
     (X = 3) ->
-        write("Menu Medallas");
+        menuFichaEntrenador;
     (X = 4) ->
         menuInfo;
     (X = 5) ->
-        write("Saliendo del menu");
+        write("Salir del menu principal");
     ((X < 1); (X > 5)) ->
         vuelveAIntentar(Y),
         menuPrincipalController(Y)
 ).
 
+menuPokemochila :-
+    write("----- Pokemochila -----"), nl,
+    write("Tengo:"), nl,
+    forall(pokebola(P, C),
+    ( C \= 0,
+    write(" -"), write(C), write(" "), write(P), nl)).
+
+
+menuFichaEntrenador :-
+    dinero(D),
+    write("----- Ficha de Entrenador -----"), nl,
+    write("Dinero: "), write(D), write(" pokes"), nl,
+    write("Medallas Obtenidas: "), nl,
+    forall(medalla(X, si),
+    (write("- "), write(X), nl)).
+
 menuInfoController(X) :-
 (   (X = 1) ->
         menuItemPokebolas;
     (X = 2) ->
-        write("Pokemons"), nl;
+        menuInfoEvo;
     (X = 3) ->
         menuItemHuevos;
     (X = 4) ->
@@ -259,8 +289,12 @@ menuInfoController(X) :-
         menuInfoController(Y)
 ).
 
-menuInfoPokemon :-
-    write("----- Evoluciones Pokemon ------"), nl.
+menuInfoEvo :-
+    write("----- Evoluciones Pokemon ------"), nl,
+    forall(evolucion(P, Evo, Exp),
+    (write(" - "), write(P), write(" evoluciona a "),
+     write(Evo), write(" con "), write(Exp), write(" exp"), nl)).
+    
 
 menuItemPokemons :-
     write("----- Mis Pokemons ------"), nl,
@@ -299,8 +333,10 @@ numPokemons(N) :-
     len(P, N).
 
 agregarPokemon(Pokemon) :-
-    misPokemon(P), 
-    append(P,[[Pokemon, normal, 100]], L),
+    misPokemon(P),
+    numPokemons(N),
+    N < 6,
+    append(P,[Pokemon], L),
     asserta(misPokemon(L)),
     retract(misPokemon(P)).
 
@@ -357,6 +393,126 @@ getElement([X|_], 1, X).
 getElement([_|T], N, X):-
           N2 is N - 1,
           getElement(T, N2, X).
+
+menuViaje :-
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Viajar a la siguiente ciudad"), nl,
+    write("2. Regresar"), nl,
+    read(X), menuViajeController(X).
+
+menuViajeController(X) :-
+    (
+        (X = 1) ->
+            bienvenidaCiudad;
+        (X = 2) ->
+            menuCiudad;
+        ((X < 1); (X > 2)) ->
+            vuelveAIntentar(Y),
+            menuViajeController(Y)
+    ).
+
+bienvenidaCiudad :-
+    ciudadSiguiente(A, C),
+    asserta(ciudadAnterior(A + 1, C)),
+    retract(ciudadAnterior(A,_)),
+    write("Has llegado a ciudad "), 
+    write(C), nl,
+    menuCiudad.
+
+menuCiudad :-
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Ir a la Enfermeria"), nl,
+    write("2. Ir a la Tienda"), nl,
+    write("3. Ir al Gimnasio"), nl,
+    write("4. Abrir el menu"), nl,
+    read(X), menuCiudadController(X).
+
+menuCiudadController(X) :-
+    (
+        (X = 1) ->
+            write("Enfermeria");
+        (X = 2) ->
+            menuTienda;
+        (X = 3) ->
+            write("Gimnasio");
+        (X = 4) ->
+            mostrarMenu;
+        ((X < 1); (X > 4)) ->
+            vuelveAIntentar(Y),
+            menuCiudadController(Y)
+    ).
+
+inicio :-
+    write("!Bienvenido al Mini Mundo Pokemon¡"), nl,
+    write("Los desarrolladores Ricardo y Ulises esperamos que disfrutes de la aventura"), nl,
+    write(" - El objetivo principal es obtener las 6 medallas de los gimnasios en cada ciudad"), nl,
+    write(" - Tienes que viajar entre las ciudades para lograrlo, pero cuidado con los entrenadores y pokemons salvajes"), nl,
+    write(" - El juego se termina si todos los pokemon de tu equipo se debilitan"), nl,
+    write("!Mucha Suerte! Empecemos..."), nl, nl,
+    primerPokemon.
+
+menuTienda :-
+    dinero(D),
+    write(" --- Bienvenido a la Tienda Pokemon --- "), nl,
+    write("Tienes: "), write(D), write(" pokes."), nl, nl,
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Comprar pokeballs"), nl,
+    write("2. Comprar superballs"), nl,
+    write("3. Comprar ultraballs"), nl,
+    write("4. Comprar masterball"), nl,
+    write("5. Regresar"), nl,
+    read(X), menuTiedaController(X).
+
+menuTiedaController(X) :-
+    (
+        (X = 1) ->
+            write("Cantidad "), read(C),
+            comprar(C, 10);
+        (X = 2) ->
+            write("Cantidad "), read(C),
+            comprar(C, 15);
+        (X = 3) ->
+            write("Cantidad "), read(C),
+            comprar(C, 25);
+        (X = 4) ->
+            write("Cantidad "), read(C),
+            comprar(C, 100);
+        (X = 5) ->
+            menuCiudad;
+        ((X < 1); (X > 5)) ->
+            vuelveAIntentar(Y),
+            menuTiedaController(Y)
+    ).
+
+comprar(Cantidad, Precio) :-
+    dinero(D),
+    Total is Cantidad * Precio,
+    D > Total,
+    Resto is D - Total,
+    asserta(dinero(Resto)),
+    retract(dinero(D)),
+    write("Te quedan: "), write(Resto), write(" pokes.").
+
+menuEnfermeria :-
+    write(" --- Bienvenido al Centro Pokemon --- "), nl,
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Curar pokemons"), nl,
+    write("2. Acceder al PC"), nl,
+    write("3. Regresar"), nl,
+    read(X), menuEnfermeriaController(X).
+
+menuEnfermeriaController(X) :-
+    (
+        (X = 1) ->
+            write("Todos tus pokemon han sido curados!");
+        (X = 2) ->
+            menuItemPC;
+        (X = 3) ->
+            write("Gimnasio");
+        ((X < 1); (X > 3)) ->
+            vuelveAIntentar(Y),
+            menuCiudadController(Y)
+    ).
 
 :- dynamic batallaTerminada/1.
 batallaTerminada(no).
