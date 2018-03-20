@@ -619,8 +619,14 @@ menuEnfermeriaController(X) :-
     (
         (X = 1) ->
             misPokemon(P),
-            actualizarPokemon([_, normal, 100],P, NuevosPokemones);
-            asserta(misPokemon(NuevosPokemones)), retractall(misPokemon(_)),
+            indexOf(P,[_,debilitado,_,_], I),
+            getElement(P, I + 1, Pokemon),
+            removeElement(Pokemon, P, NL),
+            asserta(misPokemon(NL)),
+            retract(misPokemon(P)),
+            nombrePokemon(Pokemon, Nombre),
+            expPokemon(Pokemon, Exp),
+            agregarPokemon(Nombre, Exp),
             write("Todos tus pokemon han sido curados!");
         (X = 2) ->
             menuItemPC;
