@@ -619,14 +619,7 @@ menuEnfermeriaController(X) :-
     (
         (X = 1) ->
             misPokemon(P),
-            indexOf(P,[_,debilitado,_,_], I),
-            getElement(P, I + 1, Pokemon),
-            removeElement(Pokemon, P, NL),
-            asserta(misPokemon(NL)),
-            retract(misPokemon(P)),
-            nombrePokemon(Pokemon, Nombre),
-            expPokemon(Pokemon, Exp),
-            agregarPokemon(Nombre, Exp),
+            curarPokemons(P),
             write("Todos tus pokemon han sido curados!");
         (X = 2) ->
             menuItemPC;
@@ -942,3 +935,33 @@ verificarHuevo :-
     write("El huevo ha eclosionado!"), nl,
     write("- Es un "), write(Pokemon1), nl,
     agregarPokemon(Pokemon1, 0).
+
+curarPokemons([]).
+curarPokemons([X | T]):-
+    misPokemon(P),
+    nombrePokemon(X, Nombre),
+    expPokemon(X, Exp),
+    removeElement(X, P, NL),
+    retract(misPokemon(P)),
+    asserta(misPokemon(NL)),
+    agregarPokemon(Nombre, Exp),
+    curarPokemons(T).
+
+
+
+contadorGimnasio(X) :-
+    X1 is X + 1,
+    X < 7,
+    write("Batalla numero "), write(X), nl,
+    pelear,
+    contadorGimnasio(X1).
+
+menuGimnasio :-
+    ciudadAnterior(Id, _),
+    (
+        (Id = 1) ->
+            write("");
+        ((Id > 1); (Id < 7)) ->
+            write("")
+    ),
+    contadorGimnasio(Id).
