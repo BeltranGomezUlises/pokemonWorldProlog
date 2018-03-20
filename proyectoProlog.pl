@@ -234,7 +234,7 @@ menuItemPokebolas :-
     write("----- Pokebolas -----"), nl,
     write(" Tipo         Precio"), nl,
     forall(precio(Nombre, Precio),
-    (write("-"), write(Nombre), write("\t"), write(Precio), write(" pokes"), nl)).
+    (write("-"), write(Nombre), write("\t"), write(Precio), write(" pokes"), nl)), menuCaminar.
 
 menuItemCiudades :-
     write("----- Ciudades ------"), nl,
@@ -244,7 +244,7 @@ menuItemCiudades :-
     write("Azulona       Plateada      8 Kms"), nl,
     write("Plateada      Celeste       10 Kms"), nl,
     write("Celeste       Lavanda        10 Kms"), nl,
-    write("Lavanda      Carmin          15 Kms"), nl.
+    write("Lavanda      Carmin          15 Kms"), nl, menuCaminar.
 
 menuItemHuevos :-
     write("----- Huevos ------"), nl,
@@ -253,7 +253,7 @@ menuItemHuevos :-
     write("Planta         3"), nl,
     write("Agua          5"), nl,
     write("Fuego         7"), nl,
-    write("Electrico     5").
+    write("Electrico     5"), menuCaminar.
 
 menuPrincipalController(X, MenuAnterior):-
 (   (X = 1) ->
@@ -281,7 +281,7 @@ menuPokemochila :-
     write("Tengo:"), nl,
     forall(pokebola(P, C),
     ( C \= 0,
-    write(" -"), write(C), write(" "), write(P), nl)).
+    write(" -"), write(C), write(" "), write(P), nl)), menuCaminar.
 
 menuFichaEntrenador :-
     dinero(D),
@@ -289,7 +289,7 @@ menuFichaEntrenador :-
     write("Dinero: "), write(D), write(" pokes"), nl,
     write("Medallas Obtenidas: "), nl,
     forall(medalla(X, si),
-    (write("- "), write(X), nl)).
+    (write("- "), write(X), nl)), menuCaminar.
 
 menuInfoController(X) :-
 (   (X = 1) ->
@@ -309,7 +309,7 @@ menuInfoEvo :-
     write("----- Evoluciones Pokemon ------"), nl,
     forall(evolucion(P, Evo, Exp),
     (write(" - "), write(P), write(" evoluciona a "),
-     write(Evo), write(" con "), write(Exp), write(" exp"), nl)).
+     write(Evo), write(" con "), write(Exp), write(" exp"), nl)), menuCaminar.
 
 
 menuItemPokemons :-
@@ -331,7 +331,7 @@ menuPokemonController(P, X) :-
             write("-Nombre: "), write(Nombre), nl,
             write("-Tipo: "), write(Tipo), nl,
             write("-Vida: "), write(Vida), nl,
-            write("-Exp: "), write(Exp);
+            write("-Exp: "), write(Exp), menuCaminar;
         ((X < 1); (X > N)) ->
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
@@ -628,7 +628,7 @@ menuGuardarPC :-
     misPokemon(P),
     obtenerListaNumerada(P, 0),
     write("Numero de pokemon que desea almacenar en el PC: "),
-    read(N), 
+    read(N),
     getElement(P, N, R),
     getElement(R, 1, Nombre),
     getElement(R, 4, Exp),
@@ -686,7 +686,10 @@ pelear:- asserta(batallaTerminada(no)),
   pelea(0, 0).
 pelea(DanioInicial, Turno):- Turno < 4, batallaTerminada(no),
   peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, pelea(DanioGeneradoPC, Turno1).
-pelea(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador).
+pelea(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
+  (
+    ((Ganador = 0);(Ganador = 1)) -> menuCaminar
+  ).
 
 peleaPC(DanioInicial, DanioGenerado):-
   %elegir el pokemon a pelear del pc
@@ -702,7 +705,7 @@ peleaPC(DanioInicial, DanioGenerado):-
   %actualizar en los pokemones del pc con la nueva vida
   (
     (NuevaVidaPokemon < 1) -> (
-        actualizarPokemon([NombrePokemon, debilitado, NuevaVidaPokemon, 0], PcPokemones, NuevosPokemones),
+        actualizarPokemon([NombrePokemon, debilitado, 0, 0], PcPokemones, NuevosPokemones),
         retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
       );
     (NuevaVidaPokemon > 1) -> (
@@ -731,18 +734,17 @@ peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
   %obtener las propiedades del pokemon
   vidaPokemon(Pokemon, VidaPokemon),
   nombrePokemon(Pokemon, NombrePokemon),
-  estadoPokemon(Pokemon, EstadoPokemon),
   expPokemon(Pokemon, ExpPokemon),
   %aplicar el daño recibido
   NuevaVidaPokemon is VidaPokemon - DanioInicial,
   %actualizar con el nuevo daño
   (
     (NuevaVidaPokemon < 1) -> (
-        actualizarPokemon([NombrePokemon, debilitado, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
+        actualizarPokemon([NombrePokemon, debilitado, 0, ExpPokemon], MisPokemones, NuevosPokemones),
         retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones))
       );
     (NuevaVidaPokemon > 1) -> (
-      actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
+      actualizarPokemon([NombrePokemon, normal, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
       retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones))
     )
   ),
@@ -761,18 +763,24 @@ peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
   retractall(miDanioGenerado(_)), asserta(miDanioGenerado(NuevoMiDanioGenerado)).
 
 %retorna 1 si gano la pc, retorna 0 si gano el usuario
-ganador(Ganador):- miDanioGenerado(DanioGenerado), miDanioObtenido(DanioObtenido),
-write("\nGeneraste de danio: "), write(DanioGenerado), write(", Recibiste de danio: "), write(DanioObtenido),
-(
-  (DanioGenerado < DanioObtenido)-> Ganador is 1, write("\nGano la pc con un Danio de: "), write(DanioObtenido);
-  ((DanioGenerado > DanioObtenido);(DanioGenerado = DanioObtenido)) -> (
-      Ganador is 0,
-      write("\nGanaste de experiencia pokemon: "),
-      write(DanioObtenido)
+ganador(Ganador):- (
+  (misPokemon(L), indexOf(L, [_, normal, _, _], _),
+    miDanioGenerado(DanioGenerado), miDanioObtenido(DanioObtenido),
+    write("\nGeneraste de danio: "), write(DanioGenerado), write(", Recibiste de danio: "), write(DanioObtenido),
+    (
+      (DanioGenerado < DanioObtenido)-> Ganador is 1, write("\nGano la pc con un Danio de: "), write(DanioObtenido);
+      ((DanioGenerado > DanioObtenido);(DanioGenerado = DanioObtenido)) -> (
+          Ganador is 0,
+          write("\nGanaste de experiencia pokemon: "),
+          write(DanioObtenido)
+        )
+    ));
+    (
+      misPokemon(X), not(indexOf(X, [_, normal, _, _], _)),
+      write("\n Te mataron todos los pokemones loco! El juego termina aqui... suerte para la proxima!"),
+      Ganador is 2
     )
 ).
-
-
 
 elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
   (
@@ -783,22 +791,21 @@ elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
   ).
 
 menuCaminar :-
-    write(" - Estas en la ruta pokemon"), nl,
+    write("\n- Estas en la ruta pokemon"), nl,
     write("Elige el numero de tu accion:"),nl,
     write("1. Menu principal"), nl,
     write("2. Avanzar"), nl,
     read(X), menuCaminarController(X).
 
-menuCaminarController(X) :-
-    (
-        (X = 1) ->
-            mostrarMenu(viaje);
-        (X = 2) ->
-            write("Caminando..."), nl, caminar;
-        ((X < 1); (X > 2)) ->
-            vuelveAIntentar(Y),
-            menuCaminarController(Y)
-    ).
+menuCaminarController(X) :-(
+    (X = 1) ->
+        mostrarMenu(viaje);
+    (X = 2) ->
+        write("Caminando..."), nl, caminar;
+    ((X < 1); (X > 2)) ->
+        vuelveAIntentar(Y),
+        menuCaminarController(Y)
+).
 
 %Caminar 1-Pokemon salvaje,
 %2- entrenador,
@@ -813,7 +820,7 @@ caminar :-
             menuCaminar;
         (X = 2) ->
             write("Batalla Entrenador"), nl,
-            menuCaminar;
+            pelear;
         (X = 3) ->
             write("Huevo encontrado"), nl,
             menuCaminar;
