@@ -484,14 +484,18 @@ inicio :-
     primerPokemon.
 
 menuTienda :-
-    dinero(D),
+    dinero(D), 
+    precio(pokeball, P1), 
+    precio(superball, P2),
+    precio(ultraball, P3), 
+    precio(masterball, P4), 
     write(" --- Bienvenido a la Tienda Pokemon --- "), nl,
     write("Tienes: "), write(D), write(" pokes."), nl, nl,
     write("Elige el numero de tu accion:"),nl,
-    write("1. Comprar pokeballs"), nl,
-    write("2. Comprar superballs"), nl,
-    write("3. Comprar ultraballs"), nl,
-    write("4. Comprar masterball"), nl,
+    write("1. Comprar pokeballs a "), write(P1), write(" c/u"), nl,
+    write("2. Comprar superballs a "), write(P2), write(" c/u"), nl,
+    write("3. Comprar ultraballs a "), write(P3), write(" c/u"), nl,
+    write("4. Comprar masterball a "), write(P4), write(" c/u"), nl,
     write("5. Regresar"), nl,
     read(X), menuTiedaController(X).
 
@@ -636,6 +640,7 @@ menuGuardarPC :-
 %falta eliminar de misPokemon
 
 menuSacarPC :-
+    write("--Pokemons en el PC: "), nl,
     forall(pcBill(Nombre, _),
     (write("- "), write(Nombre), nl)),
     write("Elige el pokemon que deseas sacar: "),
