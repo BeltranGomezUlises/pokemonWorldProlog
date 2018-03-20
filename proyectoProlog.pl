@@ -189,6 +189,8 @@ distanciaCiudades(celeste, lavanda, 10).
 distanciaCiudades(lavanda, carmin, 15).
 
 %PC bill (nombrePokemon, experiencia)
+:-dynamic pcBill/2.
+
 pcBill(pokemonPrueba, 100).
 
 sacarPcBill(Pokemon):-
@@ -556,6 +558,8 @@ menuTiedaController(X) :-
             menuTiedaController(Y)
     ).
 
+:- dynamic dinero/1.
+
 comprar(Cantidad, Precio, R) :-
     dinero(D),
     Total is Cantidad * Precio,
@@ -583,8 +587,8 @@ menuEnfermeriaController(X) :-
     (
         (X = 1) ->
             misPokemon(P),
-            actualizarPokemon([_, normal, 100],P, NuevosPokemones),
-            retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
+                not(actualizarPokemon([_, normal, 100, _], P, NuevosPokemones)),
+                retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
             write("Todos tus pokemon han sido curados!");
         (X = 2) ->
             menuItemPC;
@@ -731,6 +735,7 @@ peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
   misPokemon(MisPokemones),
   indexOf(MisPokemones, [_, normal, _, _], IP), Indice is IP + 1,
   getElement(MisPokemones, Indice, Pokemon),
+  retractall(pokemonActual(_)), asserta(pokemonActual(Pokemon)),
   %obtener las propiedades del pokemon
   vidaPokemon(Pokemon, VidaPokemon),
   nombrePokemon(Pokemon, NombrePokemon),
@@ -771,8 +776,17 @@ ganador(Ganador):- (
       (DanioGenerado < DanioObtenido)-> Ganador is 1, write("\nGano la pc con un Danio de: "), write(DanioObtenido);
       ((DanioGenerado > DanioObtenido);(DanioGenerado = DanioObtenido)) -> (
           Ganador is 0,
+          write("\nGanaste de dinero pokemon: "),
+          DineroPoke is DanioGenerado * 3, write(DineroPoke),
+          dinero(D),
+          NuevoDinero is D + DineroPoke,
+          retractall(dinero(_)), asserta(dinero(NuevoDinero)),
           write("\nGanaste de experiencia pokemon: "),
-          write(DanioObtenido)
+          ExperienciaPokemon is DanioGenerado * 2, write(ExperienciaPokemon),
+          pokemonActual(PokemonActual),
+          nombrePokemon(PokemonActual, Nom), vidaPokemon(PokemonActual, Vid), estadoPokemon(PokemonActual, Edo), expPokemon(PokemonActual, Exp),
+          NuevaExperiencia is Exp + ExperienciaPokemon,
+          misPokemon(L), actualizarPokemon([Nom, Edo, Vid, NuevaExperiencia], L, Result), retractall(misPokemones(_)), asserta(misPokemones(Result))
         )
     ));
     (
@@ -787,7 +801,7 @@ elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
     (Indice = 1) -> pokemonAtaque(NombrePokemon, [AtaqueElegido|_] );
     (Indice = 2) -> pokemonAtaque(NombrePokemon, [_, AtaqueElegido|_] );
     (Indice = 3) -> pokemonAtaque(NombrePokemon, [_, _, AtaqueElegido|_] );
-    (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] ), retractall(batallaTerminada(no))
+    (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] )
   ).
 
 menuCaminar :-
