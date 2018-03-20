@@ -362,7 +362,7 @@ agregarPokemon(Pokemon, EXP) :-
         (N > 5) ->
             almacenarPcBill(Pokemon, EXP)
     ).
-    
+
 
 vuelveAIntentar(Y) :-
     write("Valor invalido, vuelva a intentarlo."), nl,
@@ -378,8 +378,8 @@ primerPokemon :-
 primerPokemonController(X) :-
     (
         (X = 1) ->
-            agregarPokemon(charmander, 0);
-            %mensajePrimerViaje;
+            agregarPokemon(charmander, 0),
+            mensajePrimerViaje;
         (X = 2) ->
             agregarPokemon(bulbasaur, 0),
             mensajePrimerViaje;
@@ -393,7 +393,7 @@ primerPokemonController(X) :-
 
 mensajePrimerViaje :-
     write("Ahora que tienes tu primer pokemon puedes ir a ciudad "),
-    ciudadSiguiente(_, C), write(C), nl, 
+    ciudadSiguiente(_, C), write(C), nl,
     write(" - Has comenzado tu viaje..."), nl, menuCaminar.
 
 menuBatalla :-
@@ -658,18 +658,14 @@ menuSacarPCController(X) :-
 :- dynamic batallaTerminada/1.
 
 inicializarPeleador:-
-  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3), random(1, 33, X4),
+  random(1, 33, X1), random(1, 33, X2),
   pokemon(X1, Pokemon1, _, _, _, _),
   pokemon(X2, Pokemon2, _, _, _, _),
-  pokemon(X3, Pokemon3, _, _, _, _),
-  pokemon(X4, Pokemon4, _, _, _, _),
   retractall(pcPokemones([_])),
   asserta(
     pcPokemones([
-      [Pokemon1, normal, 100],
-      [Pokemon2, normal, 100],
-      [Pokemon3, normal, 100],
-      [Pokemon4, normal, 100]
+      [Pokemon1, normal, 100, 0],
+      [Pokemon2, normal, 100, 0]
     ])
   ).
 
@@ -687,16 +683,18 @@ peleaPC(DanioInicial, DanioGenerado):-
 nombrePokemon([Nombre|_], Nombre).
 estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
+expPokemon([_,_,_,Experiencia|_], Experiencia).
 
 peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
           misPokemon(MisPokemones),
-          indexOf(MisPokemones, [_, normal, _], IP), Indice is IP + 1,
+          indexOf(MisPokemones, [_, normal, _, _], IP), Indice is IP + 1,
           getElement(MisPokemones, Indice, Pokemon),
           vidaPokemon(Pokemon, VidaPokemon),
           nombrePokemon(Pokemon, NombrePokemon),
           estadoPokemon(Pokemon, EstadoPokemon),
+          expPokemon(Pokemon, ExpPokemon),
           NuevaVidaPokemon is VidaPokemon - DanioInicial,
-          actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon], MisPokemones, NuevosPokemones),
+          actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
           retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
           write("tu pokemon es: "), write(NombrePokemon), nl,
           write("tiene de vida: "), write(NuevaVidaPokemon), write(", sus ataque son: \n"),
@@ -734,8 +732,8 @@ menuCaminarController(X) :-
             menuCaminarController(Y)
     ).
 
-%Caminar 1-Pokemon salvaje, 
-%2- entrenador, 
+%Caminar 1-Pokemon salvaje,
+%2- entrenador,
 %3- huevo,
 %4- pokebola,
 %5- llegar ciudad
@@ -767,10 +765,10 @@ replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
 replaceAll(O, R, [H|T], [H|T2]) :- H \= O, replaceAll(O, R, T, T2).
 
 actualizarPokemon(_, [],[]).
-actualizarPokemon([PN, ES, DN], [[P, PES, PDN]|T], [[P, PES, PDN]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN], T, T2).
-actualizarPokemon([PN, ES, DN], [[PN, _, _]|T], [[PN, ES, DN]|T2]):- actualizarPokemon([PN,ES, DN], T, T2).
+actualizarPokemon([PN, ES, DN, EXPN], [[P, PES, PDN, EXP]|T], [[P, PES, PDN, EXP]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN, EXPN], T, T2).
+actualizarPokemon([PN, ES, DN, EXPN], [[PN, _, _]|T], [[PN, ES, DN, EXPN]|T2]):- actualizarPokemon([PN,ES, DN, EXPN], T, T2).
 
 indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
   indexOf(Tail, Element, Index1),!,
-  Index is Index1+1.
+  Index is Index1 + 1.
