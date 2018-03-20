@@ -299,8 +299,8 @@ numPokemons(N) :-
     len(P, N).
 
 agregarPokemon(Pokemon) :-
-    misPokemon(P),
-    append(P,[Pokemon], L),
+    misPokemon(P), 
+    append(P,[[Pokemon, normal, 100]], L),
     asserta(misPokemon(L)),
     retract(misPokemon(P)).
 
@@ -376,4 +376,6 @@ peleoYo:- write("tu pokemon es: "), misPokemon([H|_]),
             (X = 3) -> pokemonAtaque(H, [_, _, Ataque|_] );
             (X = 4) -> pokemonAtaque(H, [_, _, _, Ataque|_] ), retractall(batallaTerminada(no))
           ),
-          write("elegiste: "), write(Ataque), nl, nl.
+          ataque(Ataque, Dano, Tipo),
+          write("elegiste: "), write(Ataque), nl,
+          write("realizaste de danio: "), write(Dano), nl, nl.
