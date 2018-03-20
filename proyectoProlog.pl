@@ -194,7 +194,7 @@ distanciaCiudades(lavanda, carmin, 15).
 pcBill(pokemonPrueba, 100).
 
 sacarPcBill(Pokemon):-
-  pcBill(Pokemon, Y), agregarPokemon([Pokemon, normal, 100, Y]), retract(pcBill(Pokemon, Y)).
+  pcBill(Pokemon, Y), agregarPokemon(Pokemon, Y), retract(pcBill(Pokemon, Y)).
 
 %Poketienda
 
@@ -203,7 +203,7 @@ precio(superball, 15).
 precio(ultraball, 25).
 precio(masterball, 100).
 
-mostrarMenu :-
+mostrarMenu(MenuAnterior) :-
     write("*** PokeMenu ***"), nl,
     write("1.- Pokemons"), nl,
     write("2.- Pokemochila"), nl,
@@ -211,7 +211,7 @@ mostrarMenu :-
     write("4.- Info"), nl,
     write("5.- Salir"), nl,
     write("¿Que deseas hacer? (Numero)"), nl,
-    read(X), menuPrincipalController(X).
+    read(X), menuPrincipalController(X, MenuAnterior).
 
 menuInfo :-
     write("--- Informacion ---"), nl,
@@ -248,7 +248,7 @@ menuItemHuevos :-
     write("Fuego         7"), nl,
     write("Electrico     5").
 
-menuPrincipalController(X):-
+menuPrincipalController(X, MenuAnterior):-
 (   (X = 1) ->
         menuItemPokemons;
     (X = 2) ->
@@ -258,10 +258,15 @@ menuPrincipalController(X):-
     (X = 4) ->
         menuInfo;
     (X = 5) ->
-        write("Salir del menu principal");
+        (
+            (MenuAnterior = viaje) ->
+                menuCaminar;
+            (MenuAnterior = ciudad) ->
+                menuCiudad
+        );
     ((X < 1); (X > 5)) ->
         vuelveAIntentar(Y),
-        menuPrincipalController(Y)
+        menuPrincipalController(Y, MenuAnterior)
 ).
 
 menuPokemochila :-
@@ -331,6 +336,7 @@ obtenerListaNumerada([X | T], C):-
     write(C1), write(".- "), write(X), nl,
     obtenerListaNumerada(T, C1).
 
+%Mispokemon([nombre, estado, vida])
 misPokemon([]).
 numPokemons(N) :-
     misPokemon(P),
@@ -339,10 +345,15 @@ numPokemons(N) :-
 agregarPokemon(Pokemon, EXP) :-
     misPokemon(P),
     numPokemons(N),
-    N < 6,
-    append(P,[[Pokemon, normal, 100, EXP]], L),
-    asserta(misPokemon(L)),
-    retract(misPokemon(P)).
+    (
+        (N < 6) ->
+            append(P,[[Pokemon, normal, 100, EXP]], L),
+            asserta(misPokemon(L)),
+            retract(misPokemon(P));
+        (N > 5) ->
+            write("something")
+    ).
+
 
 vuelveAIntentar(Y) :-
     write("Valor invalido, vuelva a intentarlo."), nl,
@@ -358,15 +369,23 @@ primerPokemon :-
 primerPokemonController(X) :-
     (
         (X = 1) ->
-            agregarPokemon(charmander, 0);
+            agregarPokemon(charmander, 0),
+            mensajePrimerViaje;
         (X = 2) ->
-            agregarPokemon(bulbasaur, 0);
+            agregarPokemon(bulbasaur, 0),
+            mensajePrimerViaje;
         (X = 3) ->
-            agregarPokemon(squirtle, 0);
+            agregarPokemon(squirtle, 0),
+            mensajePrimerViaje;
         ((X < 1); (X > 3)) ->
             vuelveAIntentar(Y),
             primerPokemonController(Y)
     ).
+
+mensajePrimerViaje :-
+    write("Ahora que tienes tu primer pokemon puedes ir a ciudad "),
+    ciudadSiguiente(_, C), write(C), nl,
+    write(" - Has comenzado tu viaje..."), nl, menuCaminar.
 
 menuBatalla :-
     write("Elige el numero de tu accion:"),nl,
@@ -407,7 +426,7 @@ menuViaje :-
 menuViajeController(X) :-
     (
         (X = 1) ->
-            bienvenidaCiudad;
+            menuCaminar;
         (X = 2) ->
             menuCiudad;
         ((X < 1); (X > 2)) ->
@@ -440,7 +459,7 @@ menuCiudadController(X) :-
         (X = 3) ->
             write("Gimnasio");
         (X = 4) ->
-            mostrarMenu;
+            mostrarMenu(ciudad);
         ((X < 1); (X > 4)) ->
             vuelveAIntentar(Y),
             menuCiudadController(Y)
@@ -471,16 +490,56 @@ menuTiedaController(X) :-
     (
         (X = 1) ->
             write("Cantidad "), read(C),
-            comprar(C, 10);
+            comprar(C, 10, R),
+            (
+                (R = 1) ->
+                    pokebola(pokeball, Cant),
+                    C1 is C + Cant,
+                    asserta(pokebola(pokeball, C1)),
+                    retract(pokebola(pokeball, Cant)),
+                    menuCiudad;
+                (R = 0) ->
+                    menuTienda
+            );
         (X = 2) ->
             write("Cantidad "), read(C),
-            comprar(C, 15);
+            comprar(C, 15, R),
+            (
+                (R = 1) ->
+                    pokebola(superball, Cant),
+                    C1 is C + Cant,
+                    asserta(pokebola(superball, C1)),
+                    retract(pokebola(superball, Cant)),
+                    menuCiudad;
+                (R = 0) ->
+                    menuTienda
+            );
         (X = 3) ->
             write("Cantidad "), read(C),
-            comprar(C, 25);
+            comprar(C, 25, R),
+            (
+                (R = 1) ->
+                    pokebola(ultraball, Cant),
+                    C1 is C + Cant,
+                    asserta(pokebola(ultraball, C1)),
+                    retract(pokebola(ultraball, Cant)),
+                    menuCiudad;
+                (R = 0) ->
+                    menuTienda
+            );
         (X = 4) ->
             write("Cantidad "), read(C),
-            comprar(C, 100);
+            comprar(C, 100, R),
+            (
+                (R = 1) ->
+                    pokebola(masterball, Cant),
+                    C1 is C + Cant,
+                    asserta(pokebola(masterball, C1)),
+                    retract(pokebola(masterball, Cant)),
+                    menuCiudad;
+                (R = 0) ->
+                    menuTienda
+            );
         (X = 5) ->
             menuCiudad;
         ((X < 1); (X > 5)) ->
@@ -488,14 +547,20 @@ menuTiedaController(X) :-
             menuTiedaController(Y)
     ).
 
-comprar(Cantidad, Precio) :-
+comprar(Cantidad, Precio, R) :-
     dinero(D),
     Total is Cantidad * Precio,
-    D > Total,
-    Resto is D - Total,
-    asserta(dinero(Resto)),
-    retract(dinero(D)),
-    write("Te quedan: "), write(Resto), write(" pokes.").
+    (
+        ((D > Total); (D = Total)) ->
+            Resto is D - Total,
+            asserta(dinero(Resto)),
+            retract(dinero(D)),
+            write("Te quedan: "), write(Resto), write(" pokes."),
+            R is 1;
+        (D < Total) ->
+            write("Dinero insuficiente, vuelve a intentar"), nl,
+            R is 0
+    ).
 
 menuEnfermeria :-
     write(" --- Bienvenido al Centro Pokemon --- "), nl,
@@ -515,7 +580,7 @@ menuEnfermeriaController(X) :-
             write("Gimnasio");
         ((X < 1); (X > 3)) ->
             vuelveAIntentar(Y),
-            menuCiudadController(Y)
+            menuEnfermeriaController(Y)
     ).
 
 
@@ -530,8 +595,8 @@ inicializarPeleador:-
   retractall(pcPokemones([_])),
   asserta(
     pcPokemones([
-      [Pokemon1, normal, 100],
-      [Pokemon2, normal, 100]
+      [Pokemon1, normal, 100, 0],
+      [Pokemon2, normal, 100, 0]
     ])
   ).
 
@@ -585,6 +650,52 @@ elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
     (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] ), retractall(batallaTerminada(no))
   ).
 
+menuCaminar :-
+    write(" - Estas en la ruta pokemon"), nl,
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Menu principal"), nl,
+    write("2. Avanzar"), nl,
+    read(X), menuCaminarController(X).
+
+menuCaminarController(X) :-
+    (
+        (X = 1) ->
+            mostrarMenu(viaje);
+        (X = 2) ->
+            write("Caminando..."), nl, caminar;
+        ((X < 1); (X > 2)) ->
+            vuelveAIntentar(Y),
+            menuCaminarController(Y)
+    ).
+
+%Caminar 1-Pokemon salvaje,
+%2- entrenador,
+%3- huevo,
+%4- pokebola,
+%5- llegar ciudad
+caminar :-
+    random(1, 6, X),
+    (
+        (X = 1) ->
+            write("Batalla Pokemon Salvaje"), nl,
+            menuCaminar;
+        (X = 2) ->
+            write("Batalla Entrenador"), nl,
+            menuCaminar;
+        (X = 3) ->
+            write("Huevo encontrado"), nl,
+            menuCaminar;
+        (X = 4) ->
+            write("Pokeball encontrada!"), nl,
+            pokebola(pokeball, C),
+            C1 is C + 1,
+            asserta(pokebola(pokeball, C1)),
+            retract(pokebola(pokeball, C)),
+            menuCaminar;
+        (X = 5) ->
+            bienvenidaCiudad
+    ).
+
 replaceAll(_, _, [], []).
 replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
 replaceAll(O, R, [H|T], [H|T2]) :- H \= O, replaceAll(O, R, T, T2).
@@ -596,4 +707,4 @@ actualizarPokemon([PN, ES, DN, EN], [[PN, _, _, _]|T], [[PN, ES, DN, EN]|T2]):- 
 indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
   indexOf(Tail, Element, Index1),!,
-  Index is Index1+1.
+  Index is Index1 + 1.
