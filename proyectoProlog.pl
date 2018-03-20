@@ -191,6 +191,8 @@ distanciaCiudades(celeste, lavanda, 10).
 distanciaCiudades(lavanda, carmin, 15).
 
 %PC bill (nombrePokemon, experiencia)
+:-dynamic pcBill/2.
+
 pcBill(pokemonPrueba, 100).
 
 sacarPcBill(Pokemon):-
@@ -435,7 +437,7 @@ menuBatallaSalvaje :-
 batallaSalvajeController(X) :-
     (
         (X = 1) ->
-            pelear;
+            pelearSalvaje;
         (X = 2) ->
             write("Lo has capturado, enhorabuena!"), nl,
             pokemonSalvaje([Nombre | _]),
@@ -592,6 +594,8 @@ menuTiedaController(X) :-
             menuTiedaController(Y)
     ).
 
+:- dynamic dinero/1.
+
 comprar(Cantidad, Precio, R) :-
     dinero(D),
     Total is Cantidad * Precio,
@@ -721,7 +725,7 @@ inicializarSalvaje :-
     asserta(pokemonSalvaje([Pokemon1, normal, 20, 0])).
 
 printPokemonesPeleador:- write("Pokemones del pc: \n"), pcPokemones(X), obtenerListaNumerada(X, 0), nl.
-
+printPokemonSalvaje:- write("Pokemon salvaje aparece!!! es: "), pokemonSalvaje([Nombre|_]), write(Nombre), nl.
 nombrePokemon([Nombre|_], Nombre).
 estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
@@ -735,6 +739,23 @@ pelear:- asserta(batallaTerminada(no)),
   inicializarPeleador,
   printPokemonesPeleador,
   pelea(0, 0).
+
+pelearSalvaje:- 
+  asserta(batallaTerminada(no)),    
+  retractall(miDanioGenerado(_)),
+  retractall(miDanioObtenido(_)),
+  asserta(miDanioGenerado(0)),
+  asserta(miDanioObtenido(0)),
+  inicializarSalvaje,  
+  printPokemonSalvaje,
+  peleaSalvaje(0,0).
+
+peleaSalvaje(DanioInicial, Turno):- Turno < 4,  batallaTerminada(no), peleoYo(DanioInicial, DanioGeneradoYo), peleaPokemonSalvaje(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, peleaSalvaje(DanioGeneradoPC, Turno1).
+peleaSalvaje(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
+  (
+    ((Ganador = 0);(Ganador = 1)) -> menuCaminar
+  ).
+
 pelea(DanioInicial, Turno):- Turno < 4, batallaTerminada(no),
   peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, pelea(DanioGeneradoPC, Turno1).
 pelea(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
@@ -777,11 +798,36 @@ peleaPC(DanioInicial, DanioGenerado):-
   NuevoMiDanioObtenido is DanioDB + DanioGenerado,
   retractall(miDanioObtenido(_)), asserta(miDanioObtenido(NuevoMiDanioObtenido)).
 
+peleaPokemonSalvaje(DanioInicial, DanioGenerado):-
+    batallaTerminada(no), write("Pokemon salvaje recibe danio: "), write(DanioInicial),nl,
+    pokemonSalvaje(Pokemon),
+    write("\nTurno pokemon salvaje!"),nl,
+    nombrePokemon(Pokemon, NombrePokemon),
+    vidaPokemon(Pokemon, VidaPokemon),
+    NuevaVidaPokemon is VidaPokemon - DanioInicial,
+    %actualizar en los pokemon con la nueva vida
+    (
+        ((NuevaVidaPokemon < 1), retractall(pokemonSalvaje(_)), asserta(pokemonSalvaje([NombrePokemon, debilitado, 0, 0])));
+        ((NuevaVidaPokemon > 1), retractall(pokemonSalvaje(_)), asserta(pcPokemones([NombrePokemon, normal, NuevaVidaPokemon, 0])))
+    ),
+    %mostrar datos actualizados
+    write("Pokemon Salvaje: "), write(NombrePokemon),
+    random(1, 4, X),
+    elegirAtaque(X, NombrePokemon, Ataque),
+    ataque(Ataque, DanioGenerado, _), write(" lanza: "), write(Ataque),
+    write(" realiza danio: "), write(DanioGenerado), nl, nl,
+    miDanioObtenido(DanioDB),
+    NuevoMiDanioObtenido is DanioDB + DanioGenerado,
+    retractall(miDanioObtenido(_)), asserta(miDanioObtenido(NuevoMiDanioObtenido)).
+
+
+
 peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
   %elegir el pokemon peleador
   misPokemon(MisPokemones),
   indexOf(MisPokemones, [_, normal, _, _], IP), Indice is IP + 1,
   getElement(MisPokemones, Indice, Pokemon),
+  retractall(pokemonActual(_)), asserta(pokemonActual(Pokemon)),
   %obtener las propiedades del pokemon
   vidaPokemon(Pokemon, VidaPokemon),
   nombrePokemon(Pokemon, NombrePokemon),
@@ -822,8 +868,17 @@ ganador(Ganador):- (
       (DanioGenerado < DanioObtenido)-> Ganador is 1, write("\nGano la pc con un Danio de: "), write(DanioObtenido);
       ((DanioGenerado > DanioObtenido);(DanioGenerado = DanioObtenido)) -> (
           Ganador is 0,
+          write("\nGanaste de dinero pokemon: "),
+          DineroPoke is DanioGenerado * 3, write(DineroPoke),
+          dinero(D),
+          NuevoDinero is D + DineroPoke,
+          retractall(dinero(_)), asserta(dinero(NuevoDinero)),
           write("\nGanaste de experiencia pokemon: "),
-          write(DanioObtenido)
+          ExperienciaPokemon is DanioGenerado * 2, write(ExperienciaPokemon),
+          pokemonActual(PokemonActual),
+          nombrePokemon(PokemonActual, Nom), vidaPokemon(PokemonActual, Vid), estadoPokemon(PokemonActual, Edo), expPokemon(PokemonActual, Exp),
+          NuevaExperiencia is Exp + ExperienciaPokemon,
+          misPokemon(L), actualizarPokemon([Nom, Edo, Vid, NuevaExperiencia], L, Result), retractall(misPokemones(_)), asserta(misPokemones(Result))
         )
     ));
     (
@@ -838,7 +893,7 @@ elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
     (Indice = 1) -> pokemonAtaque(NombrePokemon, [AtaqueElegido|_] );
     (Indice = 2) -> pokemonAtaque(NombrePokemon, [_, AtaqueElegido|_] );
     (Indice = 3) -> pokemonAtaque(NombrePokemon, [_, _, AtaqueElegido|_] );
-    (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] ), retractall(batallaTerminada(no))
+    (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] )
   ).
 
 menuCaminar :-
