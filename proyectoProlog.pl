@@ -48,7 +48,7 @@ pokemon(17, persian, normal, 28, normal, 120).
 pokemon(18, snorlax, normal, 30, normal, 0).
 
 %imprime las posibles evoluciones
-printEvoluciones():-
+printEvoluciones:-
   forall(evolucion(X, Y, Z),
   (write("pokemon: "), write(X), write(" evoluciona a: "), write(Y), write( " con experiencia: "), write(Z), nl)).
 
@@ -229,11 +229,10 @@ menuItemHuevos :-
     write("Fuego         7"), nl,
     write("Electrico     5").
 
-
-menuPrincipalController(X):- 
-(   (X = 1) -> 
+menuPrincipalController(X):-
+(   (X = 1) ->
         menuItemPokemons;
-    (X = 2) -> 
+    (X = 2) ->
         write("Menu Pokemochila");
     (X = 3) ->
         write("Menu Medallas");
@@ -261,8 +260,7 @@ menuInfoController(X) :-
 ).
 
 menuInfoPokemon :-
-    write("----- Evoluciones Pokemon ------"), nl,
-    
+    write("----- Evoluciones Pokemon ------"), nl.
 
 menuItemPokemons :-
     write("----- Mis Pokemons ------"), nl,
@@ -287,7 +285,6 @@ menuPokemonController(P, X) :-
             menuPokemonController(P, Y)
     ).
 
-
 %Param(Lista, 0)
 
 obtenerListaNumerada([], _).
@@ -295,7 +292,6 @@ obtenerListaNumerada([X | T], C):-
     C1 is C + 1,
     write(C1), write(".- "), write(X), nl,
     obtenerListaNumerada(T, C1).
-
 
 misPokemon([]).
 numPokemons(N) :-
@@ -353,7 +349,7 @@ batallaController(X) :-
     ).
 
 /* Largo de una lista */
-len([],0). 
+len([],0).
 len([_|T],N)  :-  len(T,X),  N  is  X+1.
 
 %retorna el elemnto n de una lista
@@ -361,3 +357,23 @@ getElement([X|_], 1, X).
 getElement([_|T], N, X):-
           N2 is N - 1,
           getElement(T, N2, X).
+
+:- dynamic batallaTerminada/1.
+batallaTerminada(no).
+
+pelear:- asserta(batallaTerminada(no)), pelea.
+pelea:- batallaTerminada(no), peleoYo, pelea.
+pelea:- write("batalla terminada").
+
+peleoYo:- write("tu pokemon es: "), misPokemon([H|_]),
+          write(H), write(", sus ataque son: \n"),
+          pokemonAtaque(H, L), write("\n elige uno: \n"),
+          obtenerListaNumerada(L, 0),
+          read(X),
+          (
+            (X = 1) -> pokemonAtaque(H, [Ataque|_] );
+            (X = 2) -> pokemonAtaque(H, [_, Ataque|_] );
+            (X = 3) -> pokemonAtaque(H, [_, _, Ataque|_] );
+            (X = 4) -> pokemonAtaque(H, [_, _, _, Ataque|_] ), retractall(batallaTerminada(no))
+          ),
+          write("elegiste: "), write(Ataque), nl, nl.
