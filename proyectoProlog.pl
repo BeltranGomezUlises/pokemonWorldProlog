@@ -190,6 +190,12 @@ distanciaCiudades(plateada, celeste, 10).
 distanciaCiudades(celeste, lavanda, 10).
 distanciaCiudades(lavanda, carmin, 15).
 
+%PC bill (nombrePokemon, experiencia)
+pcBill(pokemonPrueba, 100).
+
+sacarPcBill(Pokemon):-
+  pcBill(Pokemon, Y), agregarPokemon([Pokemon, normal, 100, Y]), retract(pcBill(Pokemon, Y)).
+
 %Poketienda
 
 precio(pokeball, 10).
@@ -538,21 +544,24 @@ printPokemonesPeleador:- write("Pokemones del pc: \n"), pcPokemones(X), obtenerL
 pelear:- asserta(batallaTerminada(no)), inicializarPeleador, printPokemonesPeleador, pelea(0).
 pelea(DanioInicial):- batallaTerminada(no),
   peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), pelea(DanioGeneradoPC).
-pelea(X):- write("batalla terminada").
+pelea(_):- write("batalla terminada").
 
-peleaPC(DanioInicial, DanioGenerado):- batallaTerminada(no), write("turno maquina"), DanioGenerado is 5.
+peleaPC(DanioInicial, DanioGenerado):-
+  nl, write("Maquina recibe danio: "), write(DanioInicial),
+  batallaTerminada(no), write("turno maquina"), DanioGenerado is 5.
 
 nombrePokemon([Nombre|_], Nombre).
 estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
 
 peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
-          misPokemon([Pokemon|_]), %obtener en H el primer pokemon, reemplazar funcion por obtener pokemon a pelear
+          misPokemon(MisPokemones),
+          indexOf(MisPokemones, [_, normal, _], IP), Indice is IP + 1,
+          getElement(MisPokemones, Indice, Pokemon),
           vidaPokemon(Pokemon, VidaPokemon),
           nombrePokemon(Pokemon, NombrePokemon),
           estadoPokemon(Pokemon, EstadoPokemon),
           NuevaVidaPokemon is VidaPokemon - DanioInicial,
-          misPokemon(MisPokemones),
           actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon], MisPokemones, NuevosPokemones),
           retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
           write("tu pokemon es: "), write(NombrePokemon), nl,
@@ -578,5 +587,10 @@ replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
 replaceAll(O, R, [H|T], [H|T2]) :- H \= O, replaceAll(O, R, T, T2).
 
 actualizarPokemon(_, [],[]).
-actualizarPokemon([PN,ES, DN], [[P, PES, PDN]|T], [[P, PES, PDN]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN], T, T2).
-actualizarPokemon([PN,ES, DN], [[PN, _, _]|T], [[PN, ES, DN]|T2]):- actualizarPokemon([PN,ES, DN], T, T2).
+actualizarPokemon([PN, ES, DN], [[P, PES, PDN]|T], [[P, PES, PDN]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN], T, T2).
+actualizarPokemon([PN, ES, DN], [[PN, _, _]|T], [[PN, ES, DN]|T2]):- actualizarPokemon([PN,ES, DN], T, T2).
+
+indexOf([Element|_], Element, 0):- !.
+indexOf([_|Tail], Element, Index):-
+  indexOf(Tail, Element, Index1),!,
+  Index is Index1+1.
