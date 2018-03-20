@@ -875,10 +875,7 @@ ganador(Ganador):- (
           retractall(dinero(_)), asserta(dinero(NuevoDinero)),
           write("\nGanaste de experiencia pokemon: "),
           ExperienciaPokemon is DanioGenerado * 2, write(ExperienciaPokemon),
-          pokemonActual(PokemonActual),
-          nombrePokemon(PokemonActual, Nom), vidaPokemon(PokemonActual, Vid), estadoPokemon(PokemonActual, Edo), expPokemon(PokemonActual, Exp),
-          NuevaExperiencia is Exp + ExperienciaPokemon,
-          misPokemon(L), actualizarPokemon([Nom, Edo, Vid, NuevaExperiencia], L, Result), retractall(misPokemones(_)), asserta(misPokemones(Result))
+          misPokemon(MisPokemon), addExperiencia(MisPokemon, ExperienciaPokemon)
         )
     ));
     (
@@ -1002,7 +999,31 @@ curarPokemons([X | T]):-
     agregarPokemon(Nombre, Exp),
     curarPokemons(T).
 
+addExperiencia([], _).
+addExperiencia([X | T], ExpAsignar):-
+    misPokemon(P),
+    nombrePokemon(X, Nombre),
+    estadoPokemon(X, Estado),
+    vidaPokemon(X, Vida),
+    expPokemon(X, Exp),
+    NuevaExpe is Exp + ExpAsignar,
+    removeElement(X, P, NL),
+    retract(misPokemon(P)),
+    asserta(misPokemon(NL)),
+    agregarPokemonParametros(Nombre, Estado, Vida, NuevaExpe),
+    addExperiencia(T, ExpAsignar).
 
+agregarPokemonParametros(Pokemon, Estado, Vida,  EXP) :-
+    misPokemon(P),
+    numPokemons(N),
+    (
+        (N < 6) ->
+            append(P,[[Pokemon,Estado, Vida, EXP]], L),
+            asserta(misPokemon(L)),
+            retract(misPokemon(P));
+        (N > 5) ->
+            almacenarPcBill(Pokemon, EXP)
+    ).
 
 contadorGimnasio(X) :-
     X1 is X + 1,
