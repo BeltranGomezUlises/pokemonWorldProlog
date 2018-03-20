@@ -194,7 +194,7 @@ distanciaCiudades(lavanda, carmin, 15).
 pcBill(pokemonPrueba, 100).
 
 sacarPcBill(Pokemon):-
-  pcBill(Pokemon, Y), agregarPokemon([Pokemon, normal, 100, Y]), retract(pcBill(Pokemon, Y)).
+  pcBill(Pokemon, Y), agregarPokemon(Pokemon, Y), retract(pcBill(Pokemon, Y)).
 
 %Poketienda
 
@@ -342,7 +342,7 @@ numPokemons(N) :-
     misPokemon(P),
     len(P, N).
 
-agregarPokemon(Pokemon) :-
+agregarPokemon(Pokemon, EXP) :-
     misPokemon(P),
     numPokemons(N),
     (
