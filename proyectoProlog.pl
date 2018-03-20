@@ -336,11 +336,11 @@ numPokemons(N) :-
     misPokemon(P),
     len(P, N).
 
-agregarPokemon(Pokemon) :-
+agregarPokemon(Pokemon, EXP) :-
     misPokemon(P),
     numPokemons(N),
     N < 6,
-    append(P,[[Pokemon, normal, 100]], L),
+    append(P,[[Pokemon, normal, 100, EXP]], L),
     asserta(misPokemon(L)),
     retract(misPokemon(P)).
 
@@ -358,11 +358,11 @@ primerPokemon :-
 primerPokemonController(X) :-
     (
         (X = 1) ->
-            agregarPokemon(charmander);
+            agregarPokemon(charmander, 0);
         (X = 2) ->
-            agregarPokemon(bulbasaur);
+            agregarPokemon(bulbasaur, 0);
         (X = 3) ->
-            agregarPokemon(squirtle);
+            agregarPokemon(squirtle, 0);
         ((X < 1); (X > 3)) ->
             vuelveAIntentar(Y),
             primerPokemonController(Y)
@@ -524,18 +524,14 @@ menuEnfermeriaController(X) :-
 :- dynamic batallaTerminada/1.
 
 inicializarPeleador:-
-  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3), random(1, 33, X4),
+  random(1, 33, X1), random(1, 33, X2),
   pokemon(X1, Pokemon1, _, _, _, _),
   pokemon(X2, Pokemon2, _, _, _, _),
-  pokemon(X3, Pokemon3, _, _, _, _),
-  pokemon(X4, Pokemon4, _, _, _, _),
   retractall(pcPokemones([_])),
   asserta(
     pcPokemones([
       [Pokemon1, normal, 100],
-      [Pokemon2, normal, 100],
-      [Pokemon3, normal, 100],
-      [Pokemon4, normal, 100]
+      [Pokemon2, normal, 100]
     ])
   ).
 
@@ -547,23 +543,30 @@ pelea(DanioInicial):- batallaTerminada(no),
 pelea(_):- write("batalla terminada").
 
 peleaPC(DanioInicial, DanioGenerado):-
-  nl, write("Maquina recibe danio: "), write(DanioInicial),
-  batallaTerminada(no), write("turno maquina"), DanioGenerado is 5.
+  batallaTerminada(no), nl, write("Maquina recibe danio: "), write(DanioInicial),
+  write("turno maquina"),nl, DanioGenerado is 5.
 
 nombrePokemon([Nombre|_], Nombre).
 estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
+expPokemon([_, _, _, EXP|_], EXP).
 
 peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
+          %elegir el pokemon peleador
           misPokemon(MisPokemones),
-          indexOf(MisPokemones, [_, normal, _], IP), Indice is IP + 1,
+          indexOf(MisPokemones, [_, normal, _, _], IP), Indice is IP + 1,
           getElement(MisPokemones, Indice, Pokemon),
+          %obtener las propiedades del pokemon
           vidaPokemon(Pokemon, VidaPokemon),
           nombrePokemon(Pokemon, NombrePokemon),
           estadoPokemon(Pokemon, EstadoPokemon),
+          expPokemon(Pokemon, ExpPokemon),
+          %aplicar el daño recibido
           NuevaVidaPokemon is VidaPokemon - DanioInicial,
-          actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon], MisPokemones, NuevosPokemones),
+          %actualizar con el nuevo daño
+          actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
           retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
+          %seleccion de ataque
           write("tu pokemon es: "), write(NombrePokemon), nl,
           write("tiene de vida: "), write(NuevaVidaPokemon), write(", sus ataque son: \n"),
           pokemonAtaque(NombrePokemon, L), write("\n elige uno: \n"),
@@ -587,8 +590,8 @@ replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
 replaceAll(O, R, [H|T], [H|T2]) :- H \= O, replaceAll(O, R, T, T2).
 
 actualizarPokemon(_, [],[]).
-actualizarPokemon([PN, ES, DN], [[P, PES, PDN]|T], [[P, PES, PDN]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN], T, T2).
-actualizarPokemon([PN, ES, DN], [[PN, _, _]|T], [[PN, ES, DN]|T2]):- actualizarPokemon([PN,ES, DN], T, T2).
+actualizarPokemon([PN, ES, DN, EN], [[P, PES, PDN, EXP]|T], [[P, PES, PDN, EXP]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN, EN], T, T2).
+actualizarPokemon([PN, ES, DN, EN], [[PN, _, _, _]|T], [[PN, ES, DN, EN]|T2]):- actualizarPokemon([PN,ES, DN, EN], T, T2).
 
 indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
