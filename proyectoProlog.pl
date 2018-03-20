@@ -257,11 +257,14 @@ menuItemHuevos :-
 
 menuPrincipalController(X, MenuAnterior):-
 (   (X = 1) ->
-        menuItemPokemons;
+        menuItemPokemons,
+        mostrarMenu;
     (X = 2) ->
-        menuPokemochila;
+        menuPokemochila,
+        mostrarMenu;
     (X = 3) ->
-        menuFichaEntrenador;
+        menuFichaEntrenador,
+        mostrarMenu;
     (X = 4) ->
         menuInfo;
     (X = 5) ->
@@ -293,14 +296,20 @@ menuFichaEntrenador :-
 
 menuInfoController(X) :-
 (   (X = 1) ->
-        menuItemPokebolas;
+        menuItemPokebolas,
+        mostrarMenu;
     (X = 2) ->
-        menuInfoEvo;
+        menuInfoEvo,
+        mostrarMenu;
     (X = 3) ->
-        menuItemHuevos;
+        menuItemHuevos,
+        mostrarMenu;
     (X = 4) ->
-        menuItemCiudades;
-    ((X < 1); (X > 4)) ->
+        menuItemCiudades,
+        mostrarMenu;
+    (X = 5) ->
+        mostrarMenu;
+    ((X < 1); (X > 5)) ->
         vuelveAIntentar(Y),
         menuInfoController(Y)
 ).
@@ -611,7 +620,14 @@ menuItemPCController(X) :-
     numPokemons(N),
     (
         (X = 1) ->
-            menuGuardarPC;
+            (
+                (N > 1) ->
+                    menuGuardarPC;
+                (N = 1) ->
+                    write("Imposible, es necesario que tengas por lo menos un pokemon en tu equipo."), nl,
+                    menuItemPC
+            );
+            
         (X = 2) ->
             (
                 (N < 6) ->
@@ -636,8 +652,10 @@ menuGuardarPC :-
     getElement(P, N, R),
     getElement(R, 1, Nombre),
     getElement(R, 4, Exp),
-    almacenarPcBill(Nombre, Exp).
-%falta eliminar de misPokemon
+    almacenarPcBill(Nombre, Exp),
+    removeElement(R, P, NL),
+    asserta(misPokemon(NL)),
+    retract(misPokemon(P)).
 
 menuSacarPC :-
     write("--Pokemons en el PC: "), nl,
@@ -845,3 +863,9 @@ indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
   indexOf(Tail, Element, Index1),!,
   Index is Index1 + 1.
+
+removeElement(X, [X|Xs], Xs).
+removeElement(X, [Y|Ys], [Y|Zs]):- 
+    removeElement(X, Ys, Zs).
+
+
