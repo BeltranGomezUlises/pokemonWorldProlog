@@ -8,10 +8,8 @@
 pokemon(1, charmander, fuego, 10, normal, 0).
 pokemon(2, charmeleon, fuego, 20, normal, 100).
 pokemon(3, charizard, fuego, 30, normal, 200).
-
-pokemon(4, bulpix, fuego, 10, normal, 0).
+pokemon(4, vulpix, fuego, 10, normal, 0).
 pokemon(5, nineTails, fuego, 25, normal, 150).
-
 pokemon(6, growlithe, fuego, 10, normal, 0).
 pokemon(7, arcanine, fuego, 25, normal, 250).
 
@@ -19,10 +17,8 @@ pokemon(7, arcanine, fuego, 25, normal, 250).
 pokemon(8, squirtle, agua, 9, normal, 0).
 pokemon(9, wartortle, agua, 19, normal, 100).
 pokemon(10, blastoise, agua, 30, normal, 190).
-
 pokemon(11, marril, agua, 7, normal, 0).
 pokemon(12, azulMarril, agua, 16, normal, 140).
-
 pokemon(13, magikarp, agua, 1, normal, 0).
 pokemon(14, giaradous, agua, 28, normal, 250).
 
@@ -30,11 +26,9 @@ pokemon(14, giaradous, agua, 28, normal, 250).
 pokemon(15, bulbasaur, planta, 8, normal, 0).
 pokemon(16, ivysaur, planta, 18, normal, 80).
 pokemon(17, venasaur, planta, 29, normal, 190).
-
 pokemon(18, bellsprout, planta, 9, normal, 0).
 pokemon(19, weepinbell, planta, 18, normal, 120).
 pokemon(20, victreebel, planta, 26, normal, 240).
-
 pokemon(21, chikorita, planta, 10, normal, 0).
 pokemon(22, bayleef, planta, 20, normal, 90).
 pokemon(23, meganium, planta, 30, normal, 190).
@@ -42,11 +36,9 @@ pokemon(23, meganium, planta, 30, normal, 190).
 %electrico
 pokemon(24, pikachu, electrico, 13, normal, 0).
 pokemon(25, raichu, electrico, 29, normal, 150).
-
 pokemon(26, voltrob, electrico, 12, normal, 0).
 pokemon(27, electrode, electrico, 27, normal, 130).
-
-pokemon(28, electrode, electrico, 27, normal, 130).
+pokemon(28, electabuzz, electrico, 27, normal, 0).
 
 %normal
 pokemon(14, rattata, normal, 12, normal, 0).
@@ -55,13 +47,12 @@ pokemon(16, meowth, normal, 13, normal, 0).
 pokemon(17, persian, normal, 28, normal, 120).
 pokemon(18, snorlax, normal, 30, normal, 0).
 
-
-printEvoluciones():-
+%imprime las posibles evoluciones
+printEvoluciones:-
   forall(evolucion(X, Y, Z),
-  (write("pokemon: "), write(X), write(" evoluciona a: "), write(Y), write( " con experiencia: "), write(Z), nl)).  
+  (write("pokemon: "), write(X), write(" evoluciona a: "), write(Y), write( " con experiencia: "), write(Z), nl)).
 
 % (Pokemon, Evolucion, EXP)
-
 evolucion(charmander, charmeleon, 100).
 evolucion(charmeleon, charizard, 200).
 evolucion(squirtle, wartortle, 100).
@@ -75,10 +66,6 @@ evolucion(meowth, persian, 120).
 
 estado(normal).
 estado(debilitado).
-
-poderAtaque(1).
-poderAtaque(2).
-poderAtaque(3).
 
 tipo(fuego).
 tipo(agua).
@@ -113,8 +100,38 @@ ataque(aranazo, 6, normal).
 ataque(hiperrayo, 10, normal).
 ataque(cabezazo, 7, normal).
 
-% (Tipo, KM)
+%pokemon y ataques
+pokemonAtaque(charmander, [ascuas, patadaIgnea, aranazo, placaje]).
+pokemonAtaque(charmeleon, [ascuas, patadaIgnea, aranazo, lanzallamas]).
+pokemonAtaque(charizard, [ascuas, patadaIgnea, llamarada, lanzallamas]).
+pokemonAtaque(vulpix, [ascuas, patadaIgnea, aranazo, placaje]).
+pokemonAtaque(nineTails, [ascuas, patadaIgnea, aranazo, hiperrayo]).
+pokemonAtaque(growlithe, [ascuas, patadaIgnea, aranazo, placaje]).
+pokemonAtaque(arcanine, [lanzallamas, patadaIgnea, llamarada, cabezazo]).
+pokemonAtaque(squirtle, [pistolaAgua, burbujas, aranazo, placaje]).
+pokemonAtaque(wartortle, [pistolaAgua, burbujas, surf, placaje]).
+pokemonAtaque(blastoise, [pistolaAgua, burbujas, surf, hidrobomba]).
+pokemonAtaque(marril, [pistolaAgua, burbujas, aranazo, cabezazo]).
+pokemonAtaque(azulMarril, [pistolaAgua, burbujas, surf, cabezazo]).
+pokemonAtaque(magikarp, [pistolaAgua, cabezazo, aranazo, burbujas]).
+pokemonAtaque(giaradous, [pistolaAgua, hiperrayo, surf, hidrobomba]).
+pokemonAtaque(bulbasaur, [latigoCepa, hojasNavajas, placaje, semillas]).
+pokemonAtaque(ivysaur, [latigoCepa, hojasNavajas, placaje, rayoSolar]).
+pokemonAtaque(venasaur, [latigoCepa, placaje, hojasNavajas, rayoSolar]).
+pokemonAtaque(bellsprout, [latigoCepa, hojasNavajas, placaje, aranazo]).
+pokemonAtaque(weepinbell, [latigoCepa, placaje, hojasNavajas, rayoSolar]).
+pokemonAtaque(victreebel, [latigoCepa, hojasNavajas, placaje, rayoSolar]).
+pokemonAtaque(chikorita, [latigoCepa, placaje, hojasNavajas, aranazo]).
+pokemonAtaque(bayleef, [latigoCepa, hojasNavajas, placaje, rayoSolar]).
+pokemonAtaque(meganium, [latigoCepa, placaje, hojasNavajas, rayoSolar]).
+pokemonAtaque(pikachu, [placaje, aranazo, impactrueno, chispa]).
+pokemonAtaque(raichu, [rayo, trueno, impactrueno, chispa]).
+pokemonAtaque(voltrob, [placaje, trueno, impactrueno, chispa]).
+pokemonAtaque(pikachu, [placaje, rayo, impactrueno, chispa]).
+pokemonAtaque(electrode, [placaje, rayo, impactrueno, chispa]).
+pokemonAtaque(electabuzz, [placaje, rayo, impactrueno, chispa]).
 
+% (Tipo, KM)
 kmHuevo(fuego, 7).
 kmHuevo(agua, 5).
 kmHuevo(planta, 3).
@@ -226,9 +243,8 @@ menuItemHuevos :-
     write("Fuego         7"), nl,
     write("Electrico     5").
 
-
-menuPrincipalController(X):- 
-(   (X = 1) -> 
+menuPrincipalController(X):-
+(   (X = 1) ->
         menuItemPokemons;
     (X = 2) -> 
         menuPokemochila;
@@ -303,7 +319,6 @@ menuPokemonController(P, X) :-
             menuPokemonController(P, Y)
     ).
 
-
 %Param(Lista, 0)
 
 obtenerListaNumerada([], _).
@@ -311,7 +326,6 @@ obtenerListaNumerada([X | T], C):-
     C1 is C + 1,
     write(C1), write(".- "), write(X), nl,
     obtenerListaNumerada(T, C1).
-
 
 misPokemon([]).
 numPokemons(N) :-
@@ -371,7 +385,7 @@ batallaController(X) :-
     ).
 
 /* Largo de una lista */
-len([],0). 
+len([],0).
 len([_|T],N)  :-  len(T,X),  N  is  X+1.
 
 %retorna el elemnto n de una lista
@@ -500,4 +514,22 @@ menuEnfermeriaController(X) :-
             menuCiudadController(Y)
     ).
 
-menuItemPC(asd).
+:- dynamic batallaTerminada/1.
+batallaTerminada(no).
+
+pelear:- asserta(batallaTerminada(no)), pelea.
+pelea:- batallaTerminada(no), peleoYo, pelea.
+pelea:- write("batalla terminada").
+
+peleoYo:- write("tu pokemon es: "), misPokemon([H|_]),
+          write(H), write(", sus ataque son: \n"),
+          pokemonAtaque(H, L), write("\n elige uno: \n"),
+          obtenerListaNumerada(L, 0),
+          read(X),
+          (
+            (X = 1) -> pokemonAtaque(H, [Ataque|_] );
+            (X = 2) -> pokemonAtaque(H, [_, Ataque|_] );
+            (X = 3) -> pokemonAtaque(H, [_, _, Ataque|_] );
+            (X = 4) -> pokemonAtaque(H, [_, _, _, Ataque|_] ), retractall(batallaTerminada(no))
+          ),
+          write("elegiste: "), write(Ataque), nl, nl.
