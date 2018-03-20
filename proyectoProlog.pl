@@ -4,6 +4,8 @@
 
 %Pokemons
 % (Id, Nombre, Tipo, Fuerza)
+%Huevo
+pokemon(0, huevo, huevo, 0).
 %fuego
 pokemon(1, charmander, fuego, 10).
 pokemon(2, charmeleon, fuego, 20).
@@ -220,7 +222,7 @@ mostrarMenu(MenuAnterior) :-
     write("¿Que deseas hacer? (Numero)"), nl,
     read(X), menuPrincipalController(X, MenuAnterior).
 
-menuInfo :-
+menuInfo(MenuAnterior) :-
     write("--- Informacion ---"), nl,
     write("1.- Pokebolas"), nl,
     write("2.- Evoluciones"), nl,
@@ -228,7 +230,7 @@ menuInfo :-
     write("4.- Ciudades"), nl,
     write("5.- Salir"), nl,
     write("Obtener info sobre: "),
-    read(X), menuInfoController(X).
+    read(X), menuInfoController(X, MenuAnterior).
 
 menuItemPokebolas :-
     write("----- Pokebolas -----"), nl,
@@ -258,15 +260,15 @@ menuItemHuevos :-
 menuPrincipalController(X, MenuAnterior):-
 (   (X = 1) ->
         menuItemPokemons,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 2) ->
         menuPokemochila,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 3) ->
         menuFichaEntrenador,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 4) ->
-        menuInfo;
+        menuInfo(MenuAnterior);
     (X = 5) ->
         (
             (MenuAnterior = viaje) ->
@@ -294,21 +296,21 @@ menuFichaEntrenador :-
     forall(medalla(X, si),
     (write("- "), write(X), nl)), menuCaminar.
 
-menuInfoController(X) :-
+menuInfoController(X, MenuAnterior) :-
 (   (X = 1) ->
         menuItemPokebolas,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 2) ->
         menuInfoEvo,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 3) ->
         menuItemHuevos,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 4) ->
         menuItemCiudades,
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     (X = 5) ->
-        mostrarMenu;
+        mostrarMenu(MenuAnterior);
     ((X < 1); (X > 5)) ->
         vuelveAIntentar(Y),
         menuInfoController(Y)
@@ -340,7 +342,7 @@ menuPokemonController(P, X) :-
             write("-Nombre: "), write(Nombre), nl,
             write("-Tipo: "), write(Tipo), nl,
             write("-Vida: "), write(Vida), nl,
-            write("-Exp: "), write(Exp), menuCaminar;
+            write("-Exp: "), write(Exp);
         ((X < 1); (X > N)) ->
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
