@@ -5,47 +5,47 @@
 %Pokemons
 % (Id, Nombre, Tipo, Fuerza, Estado, EXP)
 %fuego
-pokemon(1, charmander, fuego, 10).
-pokemon(2, charmeleon, fuego, 20).
-pokemon(3, charizard, fuego, 30).
-pokemon(4, vulpix, fuego, 10).
-pokemon(5, nineTails, fuego, 25).
-pokemon(6, growlithe, fuego, 10).
-pokemon(7, arcanine, fuego, 25).
+pokemon(1, charmander, fuego, 10, normal, 0).
+pokemon(2, charmeleon, fuego, 20, normal, 100).
+pokemon(3, charizard, fuego, 30, normal, 200).
+pokemon(4, vulpix, fuego, 10, normal, 0).
+pokemon(5, nineTails, fuego, 25, normal, 150).
+pokemon(6, growlithe, fuego, 10, normal, 0).
+pokemon(7, arcanine, fuego, 25, normal, 250).
 
 %agua
-pokemon(8, squirtle, agua, 9).
-pokemon(9, wartortle, agua, 19).
-pokemon(10, blastoise, agua, 30).
-pokemon(11, marril, agua, 7).
-pokemon(12, azulMarril, agua, 16).
-pokemon(13, magikarp, agua, 1).
-pokemon(14, giaradous, agua, 28).
+pokemon(8, squirtle, agua, 9, normal, 0).
+pokemon(9, wartortle, agua, 19, normal, 100).
+pokemon(10, blastoise, agua, 30, normal, 190).
+pokemon(11, marril, agua, 7, normal, 0).
+pokemon(12, azulMarril, agua, 16, normal, 140).
+pokemon(13, magikarp, agua, 1, normal, 0).
+pokemon(14, giaradous, agua, 28, normal, 250).
 
 %planta
-pokemon(15, bulbasaur, planta, 8).
-pokemon(16, ivysaur, planta, 18).
-pokemon(17, venasaur, planta, 29).
-pokemon(18, bellsprout, planta, 9).
-pokemon(19, weepinbell, planta, 18).
-pokemon(20, victreebel, planta, 26).
-pokemon(21, chikorita, planta, 10).
-pokemon(22, bayleef, planta, 20).
-pokemon(23, meganium, planta, 30).
+pokemon(15, bulbasaur, planta, 8, normal, 0).
+pokemon(16, ivysaur, planta, 18, normal, 80).
+pokemon(17, venasaur, planta, 29, normal, 190).
+pokemon(18, bellsprout, planta, 9, normal, 0).
+pokemon(19, weepinbell, planta, 18, normal, 120).
+pokemon(20, victreebel, planta, 26, normal, 240).
+pokemon(21, chikorita, planta, 10, normal, 0).
+pokemon(22, bayleef, planta, 20, normal, 90).
+pokemon(23, meganium, planta, 30, normal, 190).
 
 %electrico
-pokemon(24, pikachu, electrico, 13).
-pokemon(25, raichu, electrico, 29).
-pokemon(26, voltrob, electrico, 12).
-pokemon(27, electrode, electrico, 27).
-pokemon(28, electabuzz, electrico, 27).
+pokemon(24, pikachu, electrico, 13, normal, 0).
+pokemon(25, raichu, electrico, 29, normal, 150).
+pokemon(26, voltrob, electrico, 12, normal, 0).
+pokemon(27, electrode, electrico, 27, normal, 130).
+pokemon(28, electabuzz, electrico, 27, normal, 0).
 
 %normal
-pokemon(29, rattata, normal, 12).
-pokemon(30, raticate, normal, 25).
-pokemon(31, meowth, normal, 13).
-pokemon(32, persian, normal, 28).
-pokemon(33, snorlax, normal, 30).
+pokemon(29, rattata, normal, 12, normal, 0).
+pokemon(30, raticate, normal, 25, normal, 90).
+pokemon(31, meowth, normal, 13, normal, 0).
+pokemon(32, persian, normal, 28, normal, 120).
+pokemon(33, snorlax, normal, 30, normal, 0).
 
 %imprime las posibles evoluciones
 printEvoluciones:-
@@ -590,8 +590,8 @@ menuEnfermeriaController(X) :-
 
 inicializarPeleador:-
   random(1, 33, X1), random(1, 33, X2),
-  pokemon(X1, Pokemon1, _, _),
-  pokemon(X2, Pokemon2, _, _),
+  pokemon(X1, Pokemon1, _, _, _, _),
+  pokemon(X2, Pokemon2, _, _, _, _),
   retractall(pcPokemones([_])),
   asserta(
     pcPokemones([
@@ -602,108 +602,53 @@ inicializarPeleador:-
 
 printPokemonesPeleador:- write("Pokemones del pc: \n"), pcPokemones(X), obtenerListaNumerada(X, 0), nl.
 
+pelear:- asserta(batallaTerminada(no)), inicializarPeleador, printPokemonesPeleador, pelea(0).
+pelea(DanioInicial):- batallaTerminada(no),
+  peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), pelea(DanioGeneradoPC).
+pelea(_):- write("batalla terminada").
+
+peleaPC(DanioInicial, DanioGenerado):-
+  batallaTerminada(no), write("pc recibe danio: "), write(DanioInicial),nl,
+  write("Turno maquina!"),nl,
+  pcPokemones(PcPokemones),
+  indexOf(PcPokemones, [_, normal, _, _], IP), Indice is IP + 1,
+  getElement(PcPokemones, Indice, Pokemon),
+  write("Pokemon del pc: "), write(Pokemon),nl,
+  nombrePokemon(Pokemon, NombrePokemon),
+  random(1, 4, X),
+  elegirAtaque(X, NombrePokemon, Ataque),
+  ataque(Ataque, DanioGenerado, _), write("Pc lanza: "), write(Ataque), write(" realiza danio: "), write(DanioGenerado), nl, nl.
+
 nombrePokemon([Nombre|_], Nombre).
 estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
 expPokemon([_, _, _, EXP|_], EXP).
 
-pelear:- asserta(batallaTerminada(no)),
-  retractall(miDanioGenerado(_)),
-  retractall(miDanioObtenido(_)),
-  asserta(miDanioGenerado(0)),
-  asserta(miDanioObtenido(0)),
-  inicializarPeleador,
-  printPokemonesPeleador,
-  pelea(0, 0).
-pelea(DanioInicial, Turno):- Turno < 4, batallaTerminada(no),
-  peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, pelea(DanioGeneradoPC, Turno1).
-pelea(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador).
-
-peleaPC(DanioInicial, DanioGenerado):-
-  %elegir el pokemon a pelear del pc
-  batallaTerminada(no), write("pc recibe danio: "), write(DanioInicial),nl,
-  write("\nTurno maquina!"),nl,
-  pcPokemones(PcPokemones),
-  indexOf(PcPokemones, [_, normal, _, _], IP), Indice is IP + 1,
-  getElement(PcPokemones, Indice, Pokemon),
-  %obtener datos
-  nombrePokemon(Pokemon, NombrePokemon),
-  vidaPokemon(Pokemon, VidaPokemon),
-  NuevaVidaPokemon is VidaPokemon - DanioInicial,
-  %actualizar en los pokemones del pc con la nueva vida
-  (
-    (NuevaVidaPokemon < 1) -> (
-        actualizarPokemon([NombrePokemon, debilitado, NuevaVidaPokemon, 0], PcPokemones, NuevosPokemones),
-        retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
-      );
-    (NuevaVidaPokemon > 1) -> (
-      actualizarPokemon([NombrePokemon, normal, NuevaVidaPokemon, 0], PcPokemones, NuevosPokemones),
-      retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
-    )
-  ),
-  %mostrar datos actualizados
-  pcPokemones(PcPokemonesAct),
-  indexOf(PcPokemonesAct, [_, normal, _, _], IPAct), IndiceAct is IPAct + 1,
-  getElement(PcPokemonesAct, IndiceAct, PokemonAct),
-  write("Pokemon del pc: "), write(PokemonAct),
-  random(1, 4, X),
-  elegirAtaque(X, NombrePokemon, Ataque),
-  ataque(Ataque, DanioGenerado, _), write(" Pc lanza: "), write(Ataque),
-  write(" realiza danio: "), write(DanioGenerado), nl, nl,
-  miDanioObtenido(DanioDB),
-  NuevoMiDanioObtenido is DanioDB + DanioGenerado,
-  retractall(miDanioObtenido(_)), asserta(miDanioObtenido(NuevoMiDanioObtenido)).
-
 peleoYo(DanioInicial, DanioGenerado):- batallaTerminada(no),
-  %elegir el pokemon peleador
-  misPokemon(MisPokemones),
-  indexOf(MisPokemones, [_, normal, _, _], IP), Indice is IP + 1,
-  getElement(MisPokemones, Indice, Pokemon),
-  %obtener las propiedades del pokemon
-  vidaPokemon(Pokemon, VidaPokemon),
-  nombrePokemon(Pokemon, NombrePokemon),
-  estadoPokemon(Pokemon, EstadoPokemon),
-  expPokemon(Pokemon, ExpPokemon),
-  %aplicar el daño recibido
-  NuevaVidaPokemon is VidaPokemon - DanioInicial,
-  %actualizar con el nuevo daño
-  (
-    (NuevaVidaPokemon < 1) -> (
-        actualizarPokemon([NombrePokemon, debilitado, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
-        retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones))
-      );
-    (NuevaVidaPokemon > 1) -> (
-      actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
-      retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones))
-    )
-  ),
-  %seleccion de ataque
-  write("tu pokemon es: "), write(NombrePokemon), nl,
-  write("tiene de vida: "), write(NuevaVidaPokemon), write(", sus ataque son: \n"),
-  pokemonAtaque(NombrePokemon, L), write("\n elige uno: \n"),
-  obtenerListaNumerada(L, 0),
-  read(X),
-  elegirAtaque(X, NombrePokemon, Ataque),
-  ataque(Ataque, DanioGenerado, _),
-  write("elegiste: "), write(Ataque), nl,
-  write("realizaste de danio: "), write(DanioGenerado), nl,
-  miDanioGenerado(DanioDB),
-  NuevoMiDanioGenerado is DanioDB + DanioGenerado,
-  retractall(miDanioGenerado(_)), asserta(miDanioGenerado(NuevoMiDanioGenerado)).
-
-%retorna 1 si gano la pc, retorna 0 si gano el usuario
-ganador(Ganador):- miDanioGenerado(DanioGenerado), miDanioObtenido(DanioObtenido),
-write("\nGeneraste de danio: "), write(DanioGenerado), write(", Recibiste de danio: "), write(DanioObtenido),
-(
-  (DanioGenerado < DanioObtenido)-> Ganador is 1, write("\nGano la pc con un Danio de: "), write(DanioObtenido);
-  ((DanioGenerado > DanioObtenido);(DanioGenerado = DanioObtenido)) -> (
-      Ganador is 0,
-      write("\nGanaste de experiencia pokemon: "),
-      write(DanioObtenido)
-    )
-).
-
-
+          %elegir el pokemon peleador
+          misPokemon(MisPokemones),
+          indexOf(MisPokemones, [_, normal, _, _], IP), Indice is IP + 1,
+          getElement(MisPokemones, Indice, Pokemon),
+          %obtener las propiedades del pokemon
+          vidaPokemon(Pokemon, VidaPokemon),
+          nombrePokemon(Pokemon, NombrePokemon),
+          estadoPokemon(Pokemon, EstadoPokemon),
+          expPokemon(Pokemon, ExpPokemon),
+          %aplicar el daño recibido
+          NuevaVidaPokemon is VidaPokemon - DanioInicial,
+          %actualizar con el nuevo daño
+          actualizarPokemon([NombrePokemon, EstadoPokemon, NuevaVidaPokemon, ExpPokemon], MisPokemones, NuevosPokemones),
+          retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
+          %seleccion de ataque
+          write("tu pokemon es: "), write(NombrePokemon), nl,
+          write("tiene de vida: "), write(NuevaVidaPokemon), write(", sus ataque son: \n"),
+          pokemonAtaque(NombrePokemon, L), write("\n elige uno: \n"),
+          obtenerListaNumerada(L, 0),
+          read(X),
+          elegirAtaque(X, NombrePokemon, Ataque),
+          ataque(Ataque, DanioGenerado, _),
+          write("elegiste: "), write(Ataque), nl,
+          write("realizaste de danio: "), write(DanioGenerado), nl.
 
 elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
   (
