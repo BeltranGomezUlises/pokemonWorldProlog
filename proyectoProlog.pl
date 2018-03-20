@@ -3,7 +3,7 @@
 %Base de Conocimiento
 
 %Pokemons
-% (Id, Nombre, Tipo, Fuerza, Estado, EXP)
+% (Id, Nombre, Tipo, Fuerza)
 %fuego
 pokemon(1, charmander, fuego, 10).
 pokemon(2, charmeleon, fuego, 20).
@@ -164,8 +164,6 @@ medalla(arcoiris, no).
 
 dinero(100).
 
-%PC
-
 
 %Ciudades
 
@@ -195,6 +193,15 @@ pcBill(pokemonPrueba, 100).
 
 sacarPcBill(Pokemon):-
   pcBill(Pokemon, Y), agregarPokemon(Pokemon, Y), retract(pcBill(Pokemon, Y)).
+
+almacenarPcBill(Pokemon, Exp) :-
+    assertz(pcBill(Pokemon, Exp)).
+
+numPokemonsPC(N) :-
+    findall(Pokemon, pcBill(Pokemon,_), L),
+    len(L, N).
+
+
 
 %Poketienda
 
@@ -316,14 +323,16 @@ menuPokemonController(P, X) :-
     numPokemons(N),
     (
         ((X > 0), (X < N + 1)) ->
-            getElement(P, X, R),
-            pokemon(_, R, Tipo, _, Estado, Exp),
-            write("Nombre: "), write(R), nl,
-            write("Tipo: "), write(Tipo), nl,
-            write("Estado: "), write(Estado), nl,
-            write("Exp: "), write(Exp);
+            getElement(P, X, Pokemon),
+            getElement(Pokemon, 1, Nombre),
+            getElement(Pokemon, 3, Vida),
+            getElement(Pokemon, 4, Exp),
+            pokemon(_, Nombre, Tipo, _),
+            write("-Nombre: "), write(Nombre), nl,
+            write("-Tipo: "), write(Tipo), nl,
+            write("-Vida: "), write(Vida), nl,
+            write("-Exp: "), write(Exp);
         ((X < 1); (X > N)) ->
-            write("No"),
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
     ).
@@ -336,7 +345,7 @@ obtenerListaNumerada([X | T], C):-
     write(C1), write(".- "), write(X), nl,
     obtenerListaNumerada(T, C1).
 
-%Mispokemon([nombre, estado, vida])
+%Mispokemon([nombre, estado, vida, experiencia])
 misPokemon([]).
 numPokemons(N) :-
     misPokemon(P),
@@ -351,7 +360,7 @@ agregarPokemon(Pokemon, EXP) :-
             asserta(misPokemon(L)),
             retract(misPokemon(P));
         (N > 5) ->
-            write("something")
+            almacenarPcBill(Pokemon, EXP)
     ).
 
 
@@ -453,7 +462,7 @@ menuCiudad :-
 menuCiudadController(X) :-
     (
         (X = 1) ->
-            write("Enfermeria");
+            menuEnfermeria;
         (X = 2) ->
             menuTienda;
         (X = 3) ->
@@ -573,6 +582,9 @@ menuEnfermeria :-
 menuEnfermeriaController(X) :-
     (
         (X = 1) ->
+            misPokemon(P),
+            actualizarPokemon([_, normal, 100],P, NuevosPokemones),
+            retractall(misPokemon(_)), asserta(misPokemon(NuevosPokemones)),
             write("Todos tus pokemon han sido curados!");
         (X = 2) ->
             menuItemPC;
@@ -583,6 +595,63 @@ menuEnfermeriaController(X) :-
             menuEnfermeriaController(Y)
     ).
 
+menuItemPC :-
+    write("--- PC de Bill ---"), nl,
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Guardar Pokemon"), nl,
+    write("2. Sacar Pokemon"), nl,
+    write("3. Regresar"), nl,
+    read(X), menuItemPCController(X).
+
+menuItemPCController(X) :-
+    numPokemons(N),
+    (
+        (X = 1) ->
+            menuGuardarPC;
+        (X = 2) ->
+            (
+                (N < 6) ->
+                    menuSacarPC;
+                (N > 5) ->
+                    write("Equipo pokemon lleno"), nl,
+                    menuItemPC
+            );
+        (X = 3) ->
+            nl, write("Saliendo del PC..."), nl,
+            menuEnfermeria;
+        ((X < 1); (X > 3)) ->
+            vuelveAIntentar(Y),
+            menuEnfermeriaController(Y)
+    ).
+
+menuGuardarPC :-
+    misPokemon(P),
+    obtenerListaNumerada(P, 0),
+    write("Numero de pokemon que desea almacenar en el PC: "),
+    read(N), 
+    getElement(P, N, R),
+    getElement(R, 1, Nombre),
+    getElement(R, 4, Exp),
+    almacenarPcBill(Nombre, Exp).
+%falta eliminar de misPokemon
+
+menuSacarPC :-
+    forall(pcBill(Nombre, _),
+    (write("- "), write(Nombre), nl)),
+    write("Elige el pokemon que deseas sacar: "),
+    read(X), menuSacarPCController(X).
+
+menuSacarPCController(X) :-
+    numPokemonsPC(N),
+    (
+        ((X > 0), (X < N + 1)) ->
+            findall(Pokemon, pcBill(Pokemon, _), Lista),
+            getElement(Lista, X, Pokemon),
+            sacarPcBill(Pokemon);
+        ((X < 1); (X > N)) ->
+            vuelveAIntentar(Y),
+            menuSacarPCController(Y)
+    ).
 
 /*crear un equipo de pokemones para el contrincante*/
 
