@@ -164,7 +164,7 @@ medalla(arcoiris, no).
 
 dinero(100).
 
-%PC 
+%PC
 
 
 %Ciudades
@@ -178,9 +178,9 @@ ciudadPokemon(6, lavanda).
 ciudadPokemon(7, carmin).
 
 ciudadAnterior(1, paleta).
-ciudadSiguiente(X, Y):- 
+ciudadSiguiente(X, Y):-
     ciudadAnterior(X, _),
-    X1 is X + 1, 
+    X1 is X + 1,
     ciudadPokemon(X1, Y).
 
 distanciaCiudades(paleta, verde, 5).
@@ -222,7 +222,6 @@ menuItemPokebolas :-
     write(" Tipo         Precio"), nl,
     forall(precio(Nombre, Precio),
     (write("-"), write(Nombre), write("\t"), write(Precio), write(" pokes"), nl)).
-    
 
 menuItemCiudades :-
     write("----- Ciudades ------"), nl,
@@ -246,7 +245,7 @@ menuItemHuevos :-
 menuPrincipalController(X):-
 (   (X = 1) ->
         menuItemPokemons;
-    (X = 2) -> 
+    (X = 2) ->
         menuPokemochila;
     (X = 3) ->
         menuFichaEntrenador;
@@ -265,7 +264,6 @@ menuPokemochila :-
     forall(pokebola(P, C),
     ( C \= 0,
     write(" -"), write(C), write(" "), write(P), nl)).
-
 
 menuFichaEntrenador :-
     dinero(D),
@@ -294,7 +292,7 @@ menuInfoEvo :-
     forall(evolucion(P, Evo, Exp),
     (write(" - "), write(P), write(" evoluciona a "),
      write(Evo), write(" con "), write(Exp), write(" exp"), nl)).
-    
+
 
 menuItemPokemons :-
     write("----- Mis Pokemons ------"), nl,
@@ -336,7 +334,7 @@ agregarPokemon(Pokemon) :-
     misPokemon(P),
     numPokemons(N),
     N < 6,
-    append(P,[Pokemon], L),
+    append(P,[[Pokemon, normal, 100]], L),
     asserta(misPokemon(L)),
     retract(misPokemon(P)).
 
@@ -415,7 +413,7 @@ bienvenidaCiudad :-
     ciudadSiguiente(A, C),
     asserta(ciudadAnterior(A + 1, C)),
     retract(ciudadAnterior(A,_)),
-    write("Has llegado a ciudad "), 
+    write("Has llegado a ciudad "),
     write(C), nl,
     menuCiudad.
 
@@ -514,24 +512,41 @@ menuEnfermeriaController(X) :-
             menuCiudadController(Y)
     ).
 
+
+/*crear un equipo de pokemones para el contrincante*/
+
 :- dynamic batallaTerminada/1.
 batallaTerminada(no).
 
-pelear:- asserta(batallaTerminada(no)), pelea.
-pelea:- batallaTerminada(no), peleoYo, pelea.
-pelea:- write("batalla terminada").
+pelear:- asserta(batallaTerminada(no)), pelea(0).
+pelea(DanioInicial):- batallaTerminada(no),
+  peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), pelea(DanioGeneradoPC).
+pelea(X):- write("batalla terminada").
 
-peleoYo:- write("tu pokemon es: "), misPokemon([H|_]),
-          write(H), write(", sus ataque son: \n"),
-          pokemonAtaque(H, L), write("\n elige uno: \n"),
+peleaPC(DanioInicial, DanioGenerado):- write("turno maquina").
+
+nombrePokemon([Nombre|_], Nombre).
+estadoPokemon([_,Estado|_], Estado).
+vidaPokemon([_, _, Vida|_], Vida).
+
+peleoYo(DanioInicial, DanioGenerado):-
+          misPokemon([Pokemon|_]), %obtener en H el primer pokemon, reemplazar funcion por obtener pokemon a pelear
+          vidaPokemon(Pokemon, VidaPokemon),
+          nombrePokemon(Pokemon, NombrePokemon),
+          write("tu pokemon es: "), write(NombrePokemon), nl,
+          write("tiene de vida: "), write(VidaPokemon), write(", sus ataque son: \n"),
+          pokemonAtaque(NombrePokemon, L), write("\n elige uno: \n"),
           obtenerListaNumerada(L, 0),
           read(X),
-          (
-            (X = 1) -> pokemonAtaque(H, [Ataque|_] );
-            (X = 2) -> pokemonAtaque(H, [_, Ataque|_] );
-            (X = 3) -> pokemonAtaque(H, [_, _, Ataque|_] );
-            (X = 4) -> pokemonAtaque(H, [_, _, _, Ataque|_] ), retractall(batallaTerminada(no))
-          ),
-          ataque(Ataque, Dano, Tipo),
+          elegirAtaque(X, NombrePokemon, Ataque),
+          ataque(Ataque, Dano, _),
           write("elegiste: "), write(Ataque), nl,
-          write("realizaste de danio: "), write(Dano), nl, nl.
+          write("realizaste de danio: "), write(Dano), nl.
+
+elegirAtaque(Indice, NombrePokemon, AtaqueElegido):-
+  (
+    (Indice = 1) -> pokemonAtaque(NombrePokemon, [AtaqueElegido|_] );
+    (Indice = 2) -> pokemonAtaque(NombrePokemon, [_, AtaqueElegido|_] );
+    (Indice = 3) -> pokemonAtaque(NombrePokemon, [_, _, AtaqueElegido|_] );
+    (Indice = 4) -> pokemonAtaque(NombrePokemon, [_, _, _, AtaqueElegido|_] ), retractall(batallaTerminada(no))
+  ).
