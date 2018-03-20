@@ -259,11 +259,14 @@ menuItemHuevos :-
 
 menuPrincipalController(X, MenuAnterior):-
 (   (X = 1) ->
-        menuItemPokemons;
+        menuItemPokemons,
+        mostrarMenu;
     (X = 2) ->
-        menuPokemochila;
+        menuPokemochila,
+        mostrarMenu;
     (X = 3) ->
-        menuFichaEntrenador;
+        menuFichaEntrenador,
+        mostrarMenu;
     (X = 4) ->
         menuInfo;
     (X = 5) ->
@@ -295,14 +298,20 @@ menuFichaEntrenador :-
 
 menuInfoController(X) :-
 (   (X = 1) ->
-        menuItemPokebolas;
+        menuItemPokebolas,
+        mostrarMenu;
     (X = 2) ->
-        menuInfoEvo;
+        menuInfoEvo,
+        mostrarMenu;
     (X = 3) ->
-        menuItemHuevos;
+        menuItemHuevos,
+        mostrarMenu;
     (X = 4) ->
-        menuItemCiudades;
-    ((X < 1); (X > 4)) ->
+        menuItemCiudades,
+        mostrarMenu;
+    (X = 5) ->
+        mostrarMenu;
+    ((X < 1); (X > 5)) ->
         vuelveAIntentar(Y),
         menuInfoController(Y)
 ).
@@ -398,24 +407,45 @@ mensajePrimerViaje :-
     ciudadSiguiente(_, C), write(C), nl,
     write(" - Has comenzado tu viaje..."), nl, menuCaminar.
 
-menuBatalla :-
+menuBatallaEntrenador :-
     write("Elige el numero de tu accion:"),nl,
-    write("1. Atacar"), nl,
-    write("2. Cambiar Pokemon"), nl,
-    write("3. Salir"), nl,
+    write("1. Pelear"), nl,
+    write("2. Huir"), nl,
     read(X), batallaController(X).
 
 batallaController(X) :-
     (
         (X = 1) ->
-            write("Ataque");
+            pelear;
         (X = 2) ->
-            write("Cambiar");
-        (X = 3) ->
-            write("");
-        ((X < 1); (X > 3)) ->
+            write("Has huido"), nl,
+            menuCaminar;
+        ((X < 1); (X > 2)) ->
             vuelveAIntentar(Y),
             batallaController(Y)
+    ).
+
+menuBatallaSalvaje :-
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Pelear"), nl,
+    write("2. Capturar"), nl,
+    write("3. Huir"), nl,
+    read(X), batallaSalvajeController(X).
+
+batallaSalvajeController(X) :-
+    (
+        (X = 1) ->
+            pelear;
+        (X = 2) ->
+            write("Lo has capturado, enhorabuena!"), nl,
+            pokemonSalvaje([Nombre | _]),
+            agregarPokemon(Nombre, 0);
+        (X = 3) ->
+            write("Has huido"), nl,
+            menuCaminar;
+        ((X < 1); (X > 3)) ->
+            vuelveAIntentar(Y),
+            batallaSalvajeController(Y)
     ).
 
 /* Largo de una lista */
@@ -486,14 +516,18 @@ inicio :-
     primerPokemon.
 
 menuTienda :-
-    dinero(D),
+    dinero(D), 
+    precio(pokeball, P1), 
+    precio(superball, P2),
+    precio(ultraball, P3), 
+    precio(masterball, P4), 
     write(" --- Bienvenido a la Tienda Pokemon --- "), nl,
     write("Tienes: "), write(D), write(" pokes."), nl, nl,
     write("Elige el numero de tu accion:"),nl,
-    write("1. Comprar pokeballs"), nl,
-    write("2. Comprar superballs"), nl,
-    write("3. Comprar ultraballs"), nl,
-    write("4. Comprar masterball"), nl,
+    write("1. Comprar pokeballs a "), write(P1), write(" c/u"), nl,
+    write("2. Comprar superballs a "), write(P2), write(" c/u"), nl,
+    write("3. Comprar ultraballs a "), write(P3), write(" c/u"), nl,
+    write("4. Comprar masterball a "), write(P4), write(" c/u"), nl,
     write("5. Regresar"), nl,
     read(X), menuTiedaController(X).
 
@@ -593,7 +627,7 @@ menuEnfermeriaController(X) :-
         (X = 2) ->
             menuItemPC;
         (X = 3) ->
-            write("Gimnasio");
+            menuCiudad;
         ((X < 1); (X > 3)) ->
             vuelveAIntentar(Y),
             menuEnfermeriaController(Y)
@@ -611,7 +645,14 @@ menuItemPCController(X) :-
     numPokemons(N),
     (
         (X = 1) ->
-            menuGuardarPC;
+            (
+                (N > 1) ->
+                    menuGuardarPC;
+                (N = 1) ->
+                    write("Imposible, es necesario que tengas por lo menos un pokemon en tu equipo."), nl,
+                    menuItemPC
+            );
+            
         (X = 2) ->
             (
                 (N < 6) ->
@@ -636,10 +677,13 @@ menuGuardarPC :-
     getElement(P, N, R),
     getElement(R, 1, Nombre),
     getElement(R, 4, Exp),
-    almacenarPcBill(Nombre, Exp).
-%falta eliminar de misPokemon
+    almacenarPcBill(Nombre, Exp),
+    removeElement(R, P, NL),
+    asserta(misPokemon(NL)),
+    retract(misPokemon(P)).
 
 menuSacarPC :-
+    write("--Pokemons en el PC: "), nl,
     forall(pcBill(Nombre, _),
     (write("- "), write(Nombre), nl)),
     write("Elige el pokemon que deseas sacar: "),
@@ -672,6 +716,12 @@ inicializarPeleador:-
       [Pokemon2, normal, 100, 0]
     ])
   ).
+
+inicializarSalvaje :-
+    random(1, 33, X1),
+    pokemon(X1, Pokemon1, _, _),
+    retractall(pokemonSalvaje(_)),
+    asserta(pokemonSalvaje([Pokemon1, normal, 20, 0])).
 
 printPokemonesPeleador:- write("Pokemones del pc: \n"), pcPokemones(X), obtenerListaNumerada(X, 0), nl.
 
@@ -830,14 +880,14 @@ caminar :-
     random(1, 6, X),
     (
         (X = 1) ->
-            write("Batalla Pokemon Salvaje"), nl,
-            menuCaminar;
+            write("Un pokemon salvaje ha aparecido"), nl,
+            menuBatallaSalvaje;
         (X = 2) ->
             write("Batalla Entrenador"), nl,
-            pelear;
+            menuBatallaEntrenador;
         (X = 3) ->
             write("Huevo encontrado"), nl,
-            menuCaminar;
+            menuHuevo;
         (X = 4) ->
             write("Pokeball encontrada!"), nl,
             pokebola(pokeball, C),
@@ -861,3 +911,26 @@ indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
   indexOf(Tail, Element, Index1),!,
   Index is Index1 + 1.
+
+removeElement(X, [X|Xs], Xs).
+removeElement(X, [Y|Ys], [Y|Zs]):- 
+    removeElement(X, Ys, Zs).
+
+menuHuevo :-
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Quedarse con el"), nl,
+    write("2. Tirar"), nl,
+    read(X), menuHuevoController(X).
+
+menuHuevoController(X) :-
+    (
+        (X = 1) ->
+            agregarPokemon(huevo, 0),
+            menuCaminar;
+        (X = 2) ->
+            write("Lo has tirado"), nl,
+            menuCaminar;
+        ((X < 1); (X > 2)) ->
+            vuelveAIntentar(Y),
+            menuHuevoController(Y)
+    ).
