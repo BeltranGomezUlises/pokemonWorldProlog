@@ -884,6 +884,7 @@ caminar :-
             retract(pokebola(pokeball, C)),
             menuCaminar;
         (X = 5) ->
+            verificarHuevo,
             bienvenidaCiudad
     ).
 
@@ -922,3 +923,16 @@ menuHuevoController(X) :-
             vuelveAIntentar(Y),
             menuHuevoController(Y)
     ).
+
+verificarHuevo :-
+    misPokemon(P),
+    indexOf(P,[huevo,_,_,_], I),
+    getElement(P, I + 1, X),
+    removeElement(X, P, NL),
+    asserta(misPokemon(NL)),
+    retract(misPokemon(P)),
+    random(1, 33, X1),
+    pokemon(X1, Pokemon1, _, _),
+    write("El huevo ha eclosionado!"), nl,
+    write("- Es un "), write(Pokemon1), nl,
+    agregarPokemon(Pokemon1, 0).
