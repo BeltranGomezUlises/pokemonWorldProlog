@@ -143,6 +143,8 @@ kmHuevo(electrico, 5).
 huevo(Tipo, X) :-
     kmHuevo(Tipo, X).
 
+kmCaminados(0).
+
 %Pokemochila
 pokemochila(pokemons).
 pokemochila(medallas).
@@ -154,6 +156,8 @@ pokebola(pokeball, 5).
 pokebola(superball, 0).
 pokebola(ultraball, 0).
 pokebola(masterball, 0).
+
+
 
 %Medallas(nombre, ganada)
 medalla(ninguna, si).
@@ -287,8 +291,7 @@ menuPokemochila :-
     write("----- Pokemochila -----"), nl,
     write("Tengo:"), nl,
     forall(pokebola(P, C),
-    ( C \= 0,
-    write(" -"), write(C), write(" "), write(P), nl)), menuCaminar.
+    (write(" -"), write(C), write(" "), write(P), nl)).
 
 menuFichaEntrenador :-
     dinero(D),
@@ -296,7 +299,7 @@ menuFichaEntrenador :-
     write("Dinero: "), write(D), write(" pokes"), nl,
     write("Medallas Obtenidas: "), nl,
     forall(medalla(X, si),
-    (write("- "), write(X), nl)), menuCaminar.
+    (write("- "), write(X), nl)).
 
 menuInfoController(X, MenuAnterior) :-
 (   (X = 1) ->
@@ -439,9 +442,19 @@ batallaSalvajeController(X) :-
         (X = 1) ->
             pelearSalvaje;
         (X = 2) ->
-            write("Lo has capturado, enhorabuena!"), nl,
-            pokemonSalvaje([Nombre | _]),
-            agregarPokemon(Nombre, 0);
+            capturarPokemon(R),
+            (
+                (R = 2) ->
+                    write("Ups, parece que no tienes pokebolas, compra algunas."), nl,
+                    batallaSalvajeController(2);
+                (R = 1) ->
+                    write("Si! Lo has capturado, enhorabuena!"), nl,
+                    pokemonSalvaje([Nombre | _]),
+                    agregarPokemon(Nombre, 0);
+                (R = 0) ->
+                    write("Uf por poco, se ha escapado! Vuelve a intentarlo"), nl,
+                    batallaSalvajeController(2)
+            );
         (X = 3) ->
             write("Has huido"), nl,
             menuCaminar;
@@ -449,6 +462,86 @@ batallaSalvajeController(X) :-
             vuelveAIntentar(Y),
             batallaSalvajeController(Y)
     ).
+
+capturarPokemon(R) :-
+    write("Tengo:"), nl,
+    forall(pokebola(P, C),
+    (write(" -"), write(C), write(" "), write(P), nl)),
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Usar pokeball"), nl,
+    write("2. Usar superball"), nl,
+    write("3. Usar ultraball"), nl,
+    write("4. Usar masterball"), nl,
+    write("5. Regresar"), nl,
+    read(X), capturarPokemonController(X, R).
+
+capturarPokemonController(X, R) :-
+    (
+        (X = 1) ->
+            validarPokebola(pokeball, R);
+        (X = 2) ->
+            validarPokebola(superball, R);
+        (X = 3) ->
+            validarPokebola(ultraball, R);
+        (X = 4) ->
+            validarPokebola(masterball, R);
+        (X = 5) ->
+            menuBatallaSalvaje;
+        ((X < 1); (X > 5)) ->
+            vuelveAIntentar(Y),
+            capturarPokemonController(Y,R)
+    ).
+
+validarPokebola(Pokebola, R) :-
+    pokebola(Pokebola, Cantidad),
+    (
+        (Cantidad > 0) ->
+            intentarCaptura(Pokebola, R),
+            C1 is Cantidad - 1,
+            asserta(pokebola(Pokebola, C1)),
+            retract(pokebola(Pokebola, Cantidad));
+        (Cantidad = 0) ->
+            R is 2
+    ).
+
+/* 
+pokeball - 20%, 1/5
+superball - 33%, 1/3
+ultraball - 50%, 1/2
+masterball - 100% 1
+*/
+intentarCaptura(Pokebola, Logrado) :-
+    (
+        (Pokebola = pokeball) ->
+            random(1, 6, Random),
+            (
+                ((Random = 1); (Random = 2);
+                 (Random = 4); (Random = 5)) ->
+                    Logrado is 0;
+                (Random = 3) ->
+                    Logrado is 1
+            ), write("Has usado una pokeball..."), nl;
+        (Pokebola = superball) ->
+            random(1, 4, Random),
+            (
+                ((Random = 1); (Random = 3)) ->
+                    Logrado is 0;
+                (Random = 2) ->
+                    Logrado is 1
+            ), write("Has usado una superball..."), nl;
+        (Pokebola = ultraball) ->
+            random(1, 3, Random),
+            (
+                (Random = 1) ->
+                    Logrado is 0;
+                (Random = 2) ->
+                    Logrado is 1
+            ), write("Has usado una ultraball..."), nl;
+        (Pokebola = masterball) ->
+            Logrado is 1,
+            write("Has usado una masterball..."), nl
+    ).
+
 
 /* Largo de una lista */
 len([],0).
@@ -536,7 +629,7 @@ menuTienda :-
 menuTiedaController(X) :-
     (
         (X = 1) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de pokeballs "), read(C),
             comprar(C, 10, R),
             (
                 (R = 1) ->
@@ -549,7 +642,7 @@ menuTiedaController(X) :-
                     menuTienda
             );
         (X = 2) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de superballs "), read(C),
             comprar(C, 15, R),
             (
                 (R = 1) ->
@@ -562,7 +655,7 @@ menuTiedaController(X) :-
                     menuTienda
             );
         (X = 3) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de ultraballs "), read(C),
             comprar(C, 25, R),
             (
                 (R = 1) ->
@@ -575,7 +668,7 @@ menuTiedaController(X) :-
                     menuTienda
             );
         (X = 4) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de masterballs "), read(C),
             comprar(C, 100, R),
             (
                 (R = 1) ->
@@ -604,7 +697,7 @@ comprar(Cantidad, Precio, R) :-
             Resto is D - Total,
             asserta(dinero(Resto)),
             retract(dinero(D)),
-            write("Te quedan: "), write(Resto), write(" pokes."),
+            write("Te quedan: "), write(Resto), write(" pokes."), nl,
             R is 1;
         (D < Total) ->
             write("Dinero insuficiente, vuelve a intentar"), nl,
@@ -920,9 +1013,12 @@ menuCaminarController(X) :-(
 %5- llegar ciudad
 caminar :-
     random(1, 6, X),
+    write("Has caminado 1km"), nl,
     (
         (X = 1) ->
-            write("Un pokemon salvaje ha aparecido"), nl,
+            inicializarSalvaje,
+            pokemonSalvaje([P | _]),
+            write("Un "), write(P), write(" salvaje ha aparecido"), nl,
             menuBatallaSalvaje;
         (X = 2) ->
             write("Batalla Entrenador"), nl,
@@ -938,7 +1034,7 @@ caminar :-
             retract(pokebola(pokeball, C)),
             menuCaminar;
         (X = 5) ->
-            verificarHuevo,
+            %verificarHuevo;
             bienvenidaCiudad
     ).
 
