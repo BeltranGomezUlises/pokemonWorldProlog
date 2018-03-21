@@ -49,6 +49,23 @@ pokemon(31, meowth, normal, 13).
 pokemon(32, persian, normal, 28).
 pokemon(33, snorlax, normal, 30).
 
+%criasHuevo
+criasHuevo(1, charmander, fuego, 10).
+criasHuevo(2, vulpix, fuego, 9).
+criasHuevo(3, growlithe, fuego, 10).
+criasHuevo(4, squirtle, agua, 9).
+criasHuevo(5, marril, agua, 7).
+criasHuevo(6, magikarp, agua, 3).
+criasHuevo(7, bulbasaur, planta, 8).
+criasHuevo(8, bellsprout, planta, 9).
+criasHuevo(9, chikorita, planta, 10).
+criasHuevo(10, pikachu, electrico, 10).
+criasHuevo(11, voltrob, electrico, 8).
+criasHuevo(12, electabuzz, electrico, 11).
+criasHuevo(12, rattata, normal, 8).
+criasHuevo(14, meowth, normal, 9).
+criasHuevo(15, snorlax, normal, 30).
+
 %imprime las posibles evoluciones
 printEvoluciones:-
   forall(evolucion(X, Y, Z),
@@ -347,7 +364,7 @@ menuPokemonController(P, X) :-
             write("-Nombre: "), write(Nombre), nl,
             write("-Tipo: "), write(Tipo), nl,
             write("-Vida: "), write(Vida), nl,
-            write("-Exp: "), write(Exp);
+            write("-Exp: "), write(Exp), nl;
         ((X < 1); (X > N)) ->
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
@@ -450,7 +467,8 @@ batallaSalvajeController(X) :-
                 (R = 1) ->
                     write("Si! Lo has capturado, enhorabuena!"), nl,
                     pokemonSalvaje([Nombre | _]),
-                    agregarPokemon(Nombre, 0);
+                    agregarPokemon(Nombre, 0),
+                    menuCaminar;
                 (R = 0) ->
                     write("Uf por poco, se ha escapado! Vuelve a intentarlo"), nl,
                     batallaSalvajeController(2)
@@ -1012,8 +1030,12 @@ menuCaminarController(X) :-(
 %4- pokebola,
 %5- llegar ciudad
 caminar :-
-    random(1, 6, X),
+    (getHuevo(_),
     write("Has caminado 1km"), nl,
+    kmCaminados(K), K1 is K + 1,
+    asserta(kmCaminados(K1)), retract(kmCaminados(K)),
+    write("Kms: "), write(K1), nl, validarEclosion(K1));
+    random(1, 6, X),
     (
         (X = 1) ->
             inicializarSalvaje,
@@ -1024,7 +1046,7 @@ caminar :-
             write("Batalla Entrenador"), nl,
             menuBatallaEntrenador;
         (X = 3) ->
-            write("Huevo encontrado"), nl,
+            write("Has encontrado huevo"), nl,
             menuHuevo;
         (X = 4) ->
             write("Pokeball encontrada!"), nl,
@@ -1034,9 +1056,17 @@ caminar :-
             retract(pokebola(pokeball, C)),
             menuCaminar;
         (X = 5) ->
-            %verificarHuevo;
             bienvenidaCiudad
     ).
+
+validarEclosion(K) :-
+    pokemon(0, huevo, Tipo, _),
+    huevo(Tipo, Km),
+    K = Km,
+    eclosionarHuevo(Tipo),
+    asserta(kmCaminados(0)),
+    retract(kmCaminados(K)),
+    menuCaminar.
 
 replaceAll(_, _, [], []).
 replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
@@ -1061,10 +1091,30 @@ menuHuevo :-
     write("2. Tirar"), nl,
     read(X), menuHuevoController(X).
 
+
 menuHuevoController(X) :-
     (
         (X = 1) ->
-            agregarPokemon(huevo, 0),
+            (not(verificarHuevo),
+            random(1, 6, Tipo),
+            (
+                (Tipo = 1) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, planta, 0));
+                (Tipo = 2) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, agua, 0));
+                (Tipo = 3) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, fuego, 0));
+                (Tipo = 4) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, electrico, 0));
+                (Tipo = 5) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, normal, 0))
+            ),
+            agregarPokemon(huevo, 0)),
             menuCaminar;
         (X = 2) ->
             write("Lo has tirado"), nl,
@@ -1074,15 +1124,40 @@ menuHuevoController(X) :-
             menuHuevoController(Y)
     ).
 
+getHuevo(Indice) :-
+    misPokemon(P),
+    indexOf(P,[huevo,_,_,_], Indice).
+
+
 verificarHuevo :-
+    getHuevo(_),
+    write("Ya cuentas con un huevo en tu equipo").
+
+eclosionarHuevo(TipoHuevo) :-
     misPokemon(P),
     indexOf(P,[huevo,_,_,_], I),
-    getElement(P, I + 1, X),
+    I1 is I + 1,
+    getElement(P, I1, X),
     removeElement(X, P, NL),
     asserta(misPokemon(NL)),
     retract(misPokemon(P)),
-    random(1, 33, X1),
-    pokemon(X1, Pokemon1, _, _),
+    (
+        (TipoHuevo = fuego) ->
+            random(1, 4, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = agua) ->
+            random(4, 7, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = planta) ->
+            random(7, 10, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = electrico) ->
+            random(10, 13, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = normal) ->
+            random(13, 16, X1),
+            criasHuevo(X1, Pokemon1, _, _)
+    ),
     write("El huevo ha eclosionado!"), nl,
     write("- Es un "), write(Pokemon1), nl,
     agregarPokemon(Pokemon1, 0).
