@@ -175,7 +175,7 @@ pokebola(ultraball, 0).
 pokebola(masterball, 0).
 
 
-
+:-dynamic medalla/2.
 %Medallas(nombre, ganada)
 medalla(ninguna, si).
 medalla(puno, no).
@@ -614,7 +614,7 @@ menuCiudadController(X):-
         (X = 3) ->
             ciudadAnterior(NC, NombreCiudad),
             NumCiudad is NC - 1,
-            write("Gimnasio de la ciudad: "), write(NombreCiudad), write(" Peleadores: "), write(NumCiudad),
+            write("Gimnasio de ciudad: "), write(NombreCiudad), nl, write(" Peleadores: "), write(NumCiudad),
             pelearGim(NumCiudad);
         (X = 4) ->
             mostrarMenu(ciudad);
@@ -739,7 +739,7 @@ menuEnfermeriaController(X) :-
         (X = 1) ->
             misPokemon(P),
             curarPokemons(P),
-            write("Todos tus pokemon han sido curados!"), menuEnfermeria;
+            write("Todos tus pokemon han sido curados!"), nl, menuEnfermeria;
         (X = 2) ->
             menuItemPC;
         (X = 3) ->
@@ -834,8 +834,8 @@ inicializarPeleador:-
   ).
 
 inicializarSalvaje :-
-    random(1, 33, X1),
-    pokemon(X1, Pokemon1, _, _),
+    random(1, 16, X1),
+    criasHuevo(X1, Pokemon1, _, _),
     retractall(pokemonSalvaje(_)),
     asserta(pokemonSalvaje([Pokemon1, normal, 20, 0])).
 
@@ -846,7 +846,9 @@ estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
 expPokemon([_, _, _, EXP|_], EXP).
 
-pelearGim(N):- asserta(batallaTerminada(no)),
+pelearGim(N):- 
+    retractall(batallaTerminada(_)),
+    asserta(batallaTerminada(no)),
     retractall(miDanioGenerado(_)),
     retractall(miDanioObtenido(_)),
     asserta(miDanioGenerado(0)),
@@ -928,7 +930,9 @@ pelearGim6:-(
   ), printPokemonesPeleador, peleaGim(0, 0)
 ).
 
-pelear:- asserta(batallaTerminada(no)),
+pelear:- 
+  retractall(batallaTerminada(_)),
+  asserta(batallaTerminada(no)),
   retractall(miDanioGenerado(_)),
   retractall(miDanioObtenido(_)),
   asserta(miDanioGenerado(0)),
@@ -938,20 +942,20 @@ pelear:- asserta(batallaTerminada(no)),
   pelea(0, 0).
 
 pelearSalvaje:- 
+  retractall(batallaTerminada(_)),
   asserta(batallaTerminada(no)),    
   retractall(miDanioGenerado(_)),
   retractall(miDanioObtenido(_)),
   asserta(miDanioGenerado(0)),
   asserta(miDanioObtenido(0)),
-  inicializarSalvaje,  
-  printPokemonSalvaje,
   peleaSalvaje(0,0).
 
 peleaGim(DanioInicial, Turno):- batallaTerminada(no),
   peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, peleaGim(DanioGeneradoPC, Turno1).
 peleaGim(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
   (
-    (Ganador = 0) -> misPokemon(X), reemplazarEvolucion(X, R), retractall(misPokemon(X)), asserta(misPokemon(R)), write("\n\n Exito! al Ganar la batalla continua con tu camino"), menuCaminar;
+    (Ganador = 0) -> misPokemon(X), reemplazarEvolucion(X, R), retractall(misPokemon(X)), asserta(misPokemon(R)), write("\n\n Exito! al Ganar la batalla continua con tu camino"),
+    getMedalla, ganarJuego; menuCaminar;
     (Ganador = 1) -> write("\n\n Lastima... al perder la batalla, cura a tus pokemones e intenta de nuevo, sorry!"), menuCiudad
   ).
 
@@ -1130,7 +1134,9 @@ caminar :-
     (
         (X = 1) ->
             inicializarSalvaje, 
-            write("Batalla pokemon salvaje"), nl,
+            write("Ha aparecido un pokemon salvaje"), nl,
+            inicializarSalvaje,
+            printPokemonSalvaje,
             menuBatallaSalvaje;
         (X = 2) ->
             write("Batalla Entrenador"), nl,
@@ -1225,7 +1231,7 @@ getHuevo(Indice) :-
 
 verificarHuevo :-
     getHuevo(_),
-    write("Ya cuentas con un huevo en tu equipo"), menuHuevo.
+    write("Ya cuentas con un huevo en tu equipo"), nl, menuHuevo.
 
 eclosionarHuevo(TipoHuevo) :-
     misPokemon(P),
@@ -1293,19 +1299,32 @@ agregarPokemonParametros(Pokemon, Estado, Vida,  EXP) :-
             almacenarPcBill(Pokemon, EXP)
     ).
 
-contadorGimnasio(X) :-
-    X1 is X + 1,
-    X < 7,
-    write("Batalla numero "), write(X), nl,
-    pelear,
-    contadorGimnasio(X1).
-
-menuGimnasio :-
-    ciudadAnterior(Id, _),
+getMedalla :-
+    (medalla(ninguna, si),
+    retract(medalla(ninguna, si)),
+    asserta(medalla(ninguna, no)));
+    ciudadAnterior(X, _),
     (
-        (Id = 1) ->
-            write("");
-        ((Id > 1); (Id < 7)) ->
-            write("")
-    ),
-    contadorGimnasio(Id).
+        (X = 2) ->
+            retract(medalla(puno, no)),
+            asserta(medalla(puno, si));
+        (X = 3) ->
+            retract(medalla(tallo, no)),
+            asserta(medalla(tallo, si));
+        (X = 4) ->
+            retract(medalla(lluvia, no)),
+            asserta(medalla(lluvia, si));
+        (X = 5) ->
+            retract(medalla(relampago, no)),
+            asserta(medalla(relampago, si));
+        (X = 6) ->
+            retract(medalla(volcan, no)),
+            asserta(medalla(volcan, si));
+        (X = 7) ->
+            retract(medalla(arcoiris, no)),
+            asserta(medalla(arcoiris, si))
+    ).
+    
+    ganarJuego :- 
+        medalla(arcoiris, si),
+        write("Felicidades, ganaste el juego! Gracias por jugar. \n Hasta la proxima").
