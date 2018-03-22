@@ -49,6 +49,23 @@ pokemon(31, meowth, normal, 13).
 pokemon(32, persian, normal, 28).
 pokemon(33, snorlax, normal, 30).
 
+%criasHuevo
+criasHuevo(1, charmander, fuego, 10).
+criasHuevo(2, vulpix, fuego, 9).
+criasHuevo(3, growlithe, fuego, 10).
+criasHuevo(4, squirtle, agua, 9).
+criasHuevo(5, marril, agua, 7).
+criasHuevo(6, magikarp, agua, 3).
+criasHuevo(7, bulbasaur, planta, 8).
+criasHuevo(8, bellsprout, planta, 9).
+criasHuevo(9, chikorita, planta, 10).
+criasHuevo(10, pikachu, electrico, 10).
+criasHuevo(11, voltrob, electrico, 8).
+criasHuevo(12, electabuzz, electrico, 11).
+criasHuevo(12, rattata, normal, 8).
+criasHuevo(14, meowth, normal, 9).
+criasHuevo(15, snorlax, normal, 30).
+
 %imprime las posibles evoluciones
 printEvoluciones:-
   forall(evolucion(X, Y, Z),
@@ -143,6 +160,8 @@ kmHuevo(electrico, 5).
 huevo(Tipo, X) :-
     kmHuevo(Tipo, X).
 
+kmCaminados(0).
+
 %Pokemochila
 pokemochila(pokemons).
 pokemochila(medallas).
@@ -154,6 +173,8 @@ pokebola(pokeball, 5).
 pokebola(superball, 0).
 pokebola(ultraball, 0).
 pokebola(masterball, 0).
+
+
 
 %Medallas(nombre, ganada)
 medalla(ninguna, si).
@@ -287,8 +308,7 @@ menuPokemochila :-
     write("----- Pokemochila -----"), nl,
     write("Tengo:"), nl,
     forall(pokebola(P, C),
-    ( C \= 0,
-    write(" -"), write(C), write(" "), write(P), nl)), menuCaminar.
+    (write(" -"), write(C), write(" "), write(P), nl)).
 
 menuFichaEntrenador :-
     dinero(D),
@@ -296,7 +316,7 @@ menuFichaEntrenador :-
     write("Dinero: "), write(D), write(" pokes"), nl,
     write("Medallas Obtenidas: "), nl,
     forall(medalla(X, si),
-    (write("- "), write(X), nl)), menuCaminar.
+    (write("- "), write(X), nl)).
 
 menuInfoController(X, MenuAnterior) :-
 (   (X = 1) ->
@@ -344,7 +364,7 @@ menuPokemonController(P, X) :-
             write("-Nombre: "), write(Nombre), nl,
             write("-Tipo: "), write(Tipo), nl,
             write("-Vida: "), write(Vida), nl,
-            write("-Exp: "), write(Exp);
+            write("-Exp: "), write(Exp), nl;
         ((X < 1); (X > N)) ->
             vuelveAIntentar(Y),
             menuPokemonController(P, Y)
@@ -439,9 +459,20 @@ batallaSalvajeController(X) :-
         (X = 1) ->
             pelearSalvaje;
         (X = 2) ->
-            write("Lo has capturado, enhorabuena!"), nl,
-            pokemonSalvaje([Nombre | _]),
-            agregarPokemon(Nombre, 0);
+            capturarPokemon(R),
+            (
+                (R = 2) ->
+                    write("Ups, parece que no tienes pokebolas, compra algunas."), nl,
+                    batallaSalvajeController(2);
+                (R = 1) ->
+                    write("Si! Lo has capturado, enhorabuena!"), nl,
+                    pokemonSalvaje([Nombre | _]),
+                    agregarPokemon(Nombre, 0),
+                    menuCaminar;
+                (R = 0) ->
+                    write("Uf por poco, se ha escapado! Vuelve a intentarlo"), nl,
+                    batallaSalvajeController(2)
+            );
         (X = 3) ->
             write("Has huido"), nl,
             menuCaminar;
@@ -449,6 +480,86 @@ batallaSalvajeController(X) :-
             vuelveAIntentar(Y),
             batallaSalvajeController(Y)
     ).
+
+capturarPokemon(R) :-
+    write("Tengo:"), nl,
+    forall(pokebola(P, C),
+    (write(" -"), write(C), write(" "), write(P), nl)),
+    write("Elige el numero de tu accion:"),nl,
+    write("1. Usar pokeball"), nl,
+    write("2. Usar superball"), nl,
+    write("3. Usar ultraball"), nl,
+    write("4. Usar masterball"), nl,
+    write("5. Regresar"), nl,
+    read(X), capturarPokemonController(X, R).
+
+capturarPokemonController(X, R) :-
+    (
+        (X = 1) ->
+            validarPokebola(pokeball, R);
+        (X = 2) ->
+            validarPokebola(superball, R);
+        (X = 3) ->
+            validarPokebola(ultraball, R);
+        (X = 4) ->
+            validarPokebola(masterball, R);
+        (X = 5) ->
+            menuBatallaSalvaje;
+        ((X < 1); (X > 5)) ->
+            vuelveAIntentar(Y),
+            capturarPokemonController(Y,R)
+    ).
+
+validarPokebola(Pokebola, R) :-
+    pokebola(Pokebola, Cantidad),
+    (
+        (Cantidad > 0) ->
+            intentarCaptura(Pokebola, R),
+            C1 is Cantidad - 1,
+            asserta(pokebola(Pokebola, C1)),
+            retract(pokebola(Pokebola, Cantidad));
+        (Cantidad = 0) ->
+            R is 2
+    ).
+
+/* 
+pokeball - 20%, 1/5
+superball - 33%, 1/3
+ultraball - 50%, 1/2
+masterball - 100% 1
+*/
+intentarCaptura(Pokebola, Logrado) :-
+    (
+        (Pokebola = pokeball) ->
+            random(1, 6, Random),
+            (
+                ((Random = 1); (Random = 2);
+                 (Random = 4); (Random = 5)) ->
+                    Logrado is 0;
+                (Random = 3) ->
+                    Logrado is 1
+            ), write("Has usado una pokeball..."), nl;
+        (Pokebola = superball) ->
+            random(1, 4, Random),
+            (
+                ((Random = 1); (Random = 3)) ->
+                    Logrado is 0;
+                (Random = 2) ->
+                    Logrado is 1
+            ), write("Has usado una superball..."), nl;
+        (Pokebola = ultraball) ->
+            random(1, 3, Random),
+            (
+                (Random = 1) ->
+                    Logrado is 0;
+                (Random = 2) ->
+                    Logrado is 1
+            ), write("Has usado una ultraball..."), nl;
+        (Pokebola = masterball) ->
+            Logrado is 1,
+            write("Has usado una masterball..."), nl
+    ).
+
 
 /* Largo de una lista */
 len([],0).
@@ -536,7 +647,7 @@ menuTienda :-
 menuTiedaController(X) :-
     (
         (X = 1) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de pokeballs "), read(C),
             comprar(C, 10, R),
             (
                 (R = 1) ->
@@ -549,7 +660,7 @@ menuTiedaController(X) :-
                     menuTienda
             );
         (X = 2) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de superballs "), read(C),
             comprar(C, 15, R),
             (
                 (R = 1) ->
@@ -562,7 +673,7 @@ menuTiedaController(X) :-
                     menuTienda
             );
         (X = 3) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de ultraballs "), read(C),
             comprar(C, 25, R),
             (
                 (R = 1) ->
@@ -575,7 +686,7 @@ menuTiedaController(X) :-
                     menuTienda
             );
         (X = 4) ->
-            write("Cantidad "), read(C),
+            write("Cantidad de masterballs "), read(C),
             comprar(C, 100, R),
             (
                 (R = 1) ->
@@ -604,7 +715,7 @@ comprar(Cantidad, Precio, R) :-
             Resto is D - Total,
             asserta(dinero(Resto)),
             retract(dinero(D)),
-            write("Te quedan: "), write(Resto), write(" pokes."),
+            write("Te quedan: "), write(Resto), write(" pokes."), nl,
             R is 1;
         (D < Total) ->
             write("Dinero insuficiente, vuelve a intentar"), nl,
@@ -916,16 +1027,23 @@ menuCaminarController(X) :-(
 %4- pokebola,
 %5- llegar ciudad
 caminar :-
+    (getHuevo(_),
+    write("Has caminado 1km"), nl,
+    kmCaminados(K), K1 is K + 1,
+    asserta(kmCaminados(K1)), retract(kmCaminados(K)),
+    write("Kms: "), write(K1), nl, validarEclosion(K1));
     random(1, 6, X),
     (
         (X = 1) ->
-            write("Un pokemon salvaje ha aparecido"), nl,
+            inicializarSalvaje,
+            pokemonSalvaje([P | _]),
+            write("Un "), write(P), write(" salvaje ha aparecido"), nl,
             menuBatallaSalvaje;
         (X = 2) ->
             write("Batalla Entrenador"), nl,
             menuBatallaEntrenador;
         (X = 3) ->
-            write("Huevo encontrado"), nl,
+            write("Has encontrado huevo"), nl,
             menuHuevo;
         (X = 4) ->
             write("Pokeball encontrada!"), nl,
@@ -935,9 +1053,17 @@ caminar :-
             retract(pokebola(pokeball, C)),
             menuCaminar;
         (X = 5) ->
-            verificarHuevo,
             bienvenidaCiudad
     ).
+
+validarEclosion(K) :-
+    pokemon(0, huevo, Tipo, _),
+    huevo(Tipo, Km),
+    K = Km,
+    eclosionarHuevo(Tipo),
+    asserta(kmCaminados(0)),
+    retract(kmCaminados(K)),
+    menuCaminar.
 
 replaceAll(_, _, [], []).
 replaceAll(O, R, [O|T], [R|T2]) :- replaceAll(O, R, T, T2).
@@ -962,10 +1088,30 @@ menuHuevo :-
     write("2. Tirar"), nl,
     read(X), menuHuevoController(X).
 
+
 menuHuevoController(X) :-
     (
         (X = 1) ->
-            agregarPokemon(huevo, 0),
+            (not(verificarHuevo),
+            random(1, 6, Tipo),
+            (
+                (Tipo = 1) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, planta, 0));
+                (Tipo = 2) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, agua, 0));
+                (Tipo = 3) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, fuego, 0));
+                (Tipo = 4) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, electrico, 0));
+                (Tipo = 5) -> 
+                    retractall(pokemon(0, huevo, huevo, 0)),
+                    asserta(pokemon(0, huevo, normal, 0))
+            ),
+            agregarPokemon(huevo, 0)),
             menuCaminar;
         (X = 2) ->
             write("Lo has tirado"), nl,
@@ -975,15 +1121,40 @@ menuHuevoController(X) :-
             menuHuevoController(Y)
     ).
 
+getHuevo(Indice) :-
+    misPokemon(P),
+    indexOf(P,[huevo,_,_,_], Indice).
+
+
 verificarHuevo :-
+    getHuevo(_),
+    write("Ya cuentas con un huevo en tu equipo").
+
+eclosionarHuevo(TipoHuevo) :-
     misPokemon(P),
     indexOf(P,[huevo,_,_,_], I),
-    getElement(P, I + 1, X),
+    I1 is I + 1,
+    getElement(P, I1, X),
     removeElement(X, P, NL),
     asserta(misPokemon(NL)),
     retract(misPokemon(P)),
-    random(1, 33, X1),
-    pokemon(X1, Pokemon1, _, _),
+    (
+        (TipoHuevo = fuego) ->
+            random(1, 4, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = agua) ->
+            random(4, 7, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = planta) ->
+            random(7, 10, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = electrico) ->
+            random(10, 13, X1),
+            criasHuevo(X1, Pokemon1, _, _);
+        (TipoHuevo = normal) ->
+            random(13, 16, X1),
+            criasHuevo(X1, Pokemon1, _, _)
+    ),
     write("El huevo ha eclosionado!"), nl,
     write("- Es un "), write(Pokemon1), nl,
     agregarPokemon(Pokemon1, 0).
