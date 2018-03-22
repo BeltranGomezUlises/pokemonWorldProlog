@@ -1,7 +1,7 @@
 /* Mini Pokemon World */
 
 %Base de Conocimiento
-
+:-dynamic pokemon/4.
 %Pokemons
 % (Id, Nombre, Tipo, Fuerza)
 %Huevo
@@ -587,11 +587,12 @@ menuViajeController(X) :-
             vuelveAIntentar(Y),
             menuViajeController(Y)
     ).
-
+:- dynamic ciudadAnterior/2.
 bienvenidaCiudad :-
     ciudadSiguiente(A, C),
-    asserta(ciudadAnterior(A + 1, C)),
-    retract(ciudadAnterior(A,_)),
+    A1 is A + 1,    
+    retractall(ciudadAnterior(_,_)),
+    asserta(ciudadAnterior(A1, C)),
     write("Has llegado a ciudad "),
     write(C), nl,
     menuCiudad.
@@ -604,14 +605,17 @@ menuCiudad :-
     write("4. Abrir el menu"), nl,
     read(X), menuCiudadController(X).
 
-menuCiudadController(X) :-
+menuCiudadController(X):-
     (
         (X = 1) ->
             menuEnfermeria;
         (X = 2) ->
             menuTienda;
         (X = 3) ->
-            write("Gimnasio");
+            ciudadAnterior(NC, NombreCiudad),
+            NumCiudad is NC - 1,
+            write("Gimnasio de la ciudad: "), write(NombreCiudad), write(" Peleadores: "), write(NumCiudad),
+            pelearGim(NumCiudad);
         (X = 4) ->
             mostrarMenu(ciudad);
         ((X < 1); (X > 4)) ->
@@ -735,7 +739,7 @@ menuEnfermeriaController(X) :-
         (X = 1) ->
             misPokemon(P),
             curarPokemons(P),
-            write("Todos tus pokemon han sido curados!");
+            write("Todos tus pokemon han sido curados!"), menuEnfermeria;
         (X = 2) ->
             menuItemPC;
         (X = 3) ->
@@ -842,6 +846,88 @@ estadoPokemon([_,Estado|_], Estado).
 vidaPokemon([_, _, Vida|_], Vida).
 expPokemon([_, _, _, EXP|_], EXP).
 
+pelearGim(N):- asserta(batallaTerminada(no)),
+    retractall(miDanioGenerado(_)),
+    retractall(miDanioObtenido(_)),
+    asserta(miDanioGenerado(0)),
+    asserta(miDanioObtenido(0)),
+    (
+        (N = 1) -> pelearGim1;
+        (N = 2) -> pelearGim2;
+        (N = 3) -> pelearGim3;
+        (N = 4) -> pelearGim4;
+        (N = 5) -> pelearGim5;
+        (N = 6) -> pelearGim6
+    ).
+    
+pelearGim1:-(
+  random(1, 33, X1),
+  pokemon(X1, Pokemon1, _, _),  
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 75, 0]      
+    ])
+  ), printPokemonesPeleador, peleaGim(0, 0)
+).
+
+pelearGim2:-(
+  random(1, 33, X1), random(1, 33, X2),
+  pokemon(X1, Pokemon1, _, _),  
+  pokemon(X2, Pokemon2, _, _),  
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 50, 0],
+      [Pokemon2, normal, 50, 0]
+    ])
+  ), printPokemonesPeleador, peleaGim(0, 0)
+).
+
+pelearGim3:-(
+  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3),
+  pokemon(X1, Pokemon1, _, _),  pokemon(X2, Pokemon2, _, _), pokemon(X3, Pokemon3, _, _),    
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 50, 0], [Pokemon2, normal, 50, 0], [Pokemon3, normal, 50, 0]
+    ])
+  ), printPokemonesPeleador, peleaGim(0, 0)
+).
+
+pelearGim4:-(
+  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3), random(1, 33, X4),
+  pokemon(X1, Pokemon1, _, _),  pokemon(X2, Pokemon2, _, _), pokemon(X3, Pokemon3, _, _), pokemon(X4, Pokemon4, _, _),    
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 50, 0], [Pokemon2, normal, 50, 0], [Pokemon3, normal, 50, 0], [Pokemon4, normal, 50, 0]
+    ])
+  ), printPokemonesPeleador, peleaGim(0, 0)
+).
+
+pelearGim5:-(
+  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3), random(1, 33, X4), random(1, 33, X5),
+  pokemon(X1, Pokemon1, _, _),  pokemon(X2, Pokemon2, _, _), pokemon(X3, Pokemon3, _, _), pokemon(X4, Pokemon4, _, _), pokemon(X5, Pokemon5, _, _),
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 50, 0], [Pokemon2, normal, 50, 0], [Pokemon3, normal, 50, 0], [Pokemon4, normal,50100, 0], [Pokemon5, normal, 50, 0]
+    ])
+  ), printPokemonesPeleador, peleaGim(0, 0)
+).
+
+pelearGim6:-(
+  random(1, 33, X1), random(1, 33, X2), random(1, 33, X3), random(1, 33, X4), random(1, 33, X5),random(1, 33, X6),
+  pokemon(X1, Pokemon1, _, _),  pokemon(X2, Pokemon2, _, _), pokemon(X3, Pokemon3, _, _), pokemon(X4, Pokemon4, _, _), pokemon(X5, Pokemon5, _, _), pokemon(X6, Pokemon6, _, _),
+  retractall(pcPokemones([_])),
+  asserta(
+    pcPokemones([
+      [Pokemon1, normal, 50, 0], [Pokemon2, normal, 50, 0], [Pokemon3, normal, 50, 0], [Pokemon4, normal, 50, 0], [Pokemon5, normal, 50, 0], [Pokemon6, normal, 50, 0]
+    ])
+  ), printPokemonesPeleador, peleaGim(0, 0)
+).
+
 pelear:- asserta(batallaTerminada(no)),
   retractall(miDanioGenerado(_)),
   retractall(miDanioObtenido(_)),
@@ -861,17 +947,25 @@ pelearSalvaje:-
   printPokemonSalvaje,
   peleaSalvaje(0,0).
 
+peleaGim(DanioInicial, Turno):- batallaTerminada(no),
+  peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, peleaGim(DanioGeneradoPC, Turno1).
+peleaGim(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
+  (
+    (Ganador = 0) -> misPokemon(X), reemplazarEvolucion(X, R), retractall(misPokemon(X)), asserta(misPokemon(R)), write("\n\n Exito! al Ganar la batalla continua con tu camino"), menuCaminar;
+    (Ganador = 1) -> write("\n\n Lastima... al perder la batalla, cura a tus pokemones e intenta de nuevo, sorry!"), menuCiudad
+  ).
+
 peleaSalvaje(DanioInicial, Turno):- Turno < 4,  batallaTerminada(no), peleoYo(DanioInicial, DanioGeneradoYo), peleaPokemonSalvaje(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, peleaSalvaje(DanioGeneradoPC, Turno1).
 peleaSalvaje(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
   (
-    ((Ganador = 0);(Ganador = 1)) -> menuCaminar
+    ((Ganador = 0);(Ganador = 1)) ->  misPokemon(X), reemplazarEvolucion(X, R), retractall(misPokemon(X)), asserta(misPokemon(R)), menuCaminar
   ).
 
 pelea(DanioInicial, Turno):- Turno < 4, batallaTerminada(no),
   peleoYo(DanioInicial, DanioGeneradoYo), peleaPC(DanioGeneradoYo, DanioGeneradoPC), Turno1 is Turno + 1, pelea(DanioGeneradoPC, Turno1).
 pelea(_, Turno):- write("batalla terminada en turno: "), write(Turno), ganador(Ganador),
   (
-    ((Ganador = 0);(Ganador = 1)) -> menuCaminar
+    ((Ganador = 0);(Ganador = 1)) -> misPokemon(X), reemplazarEvolucion(X, R), retractall(misPokemon(X)), asserta(misPokemon(R)), menuCaminar
   ).
 
 peleaPC(DanioInicial, DanioGenerado):-
@@ -879,35 +973,38 @@ peleaPC(DanioInicial, DanioGenerado):-
   batallaTerminada(no), write("pc recibe danio: "), write(DanioInicial),nl,
   write("\nTurno maquina!"),nl,
   pcPokemones(PcPokemones),
-  indexOf(PcPokemones, [_, normal, _, _], IP), Indice is IP + 1,
-  getElement(PcPokemones, Indice, Pokemon),
-  %obtener datos
-  nombrePokemon(Pokemon, NombrePokemon),
-  vidaPokemon(Pokemon, VidaPokemon),
-  NuevaVidaPokemon is VidaPokemon - DanioInicial,
-  %actualizar en los pokemones del pc con la nueva vida
   (
-    (NuevaVidaPokemon < 1) -> (
-        actualizarPokemon([NombrePokemon, debilitado, 0, 0], PcPokemones, NuevosPokemones),
-        retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
-      );
-    (NuevaVidaPokemon > 1) -> (
-      actualizarPokemon([NombrePokemon, normal, NuevaVidaPokemon, 0], PcPokemones, NuevosPokemones),
-      retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
-    )
-  ),
-  %mostrar datos actualizados
-  pcPokemones(PcPokemonesAct),
-  indexOf(PcPokemonesAct, [_, normal, _, _], IPAct), IndiceAct is IPAct + 1,
-  getElement(PcPokemonesAct, IndiceAct, PokemonAct),
-  write("Pokemon del pc: "), write(PokemonAct),
-  random(1, 4, X),
-  elegirAtaque(X, NombrePokemon, Ataque),
-  ataque(Ataque, DanioGenerado, _), write(" Pc lanza: "), write(Ataque),
-  write(" realiza danio: "), write(DanioGenerado), nl, nl,
-  miDanioObtenido(DanioDB),
-  NuevoMiDanioObtenido is DanioDB + DanioGenerado,
-  retractall(miDanioObtenido(_)), asserta(miDanioObtenido(NuevoMiDanioObtenido)).
+    (indexOf(PcPokemones, [_, normal, _, _], IP)) -> 
+        indexOf(PcPokemones, [_, normal, _, _], IP), Indice is IP + 1,
+        getElement(PcPokemones, Indice, Pokemon),
+        %obtener datos
+        nombrePokemon(Pokemon, NombrePokemon),
+        vidaPokemon(Pokemon, VidaPokemon),
+        NuevaVidaPokemon is VidaPokemon - DanioInicial,
+        %actualizar en los pokemones del pc con la nueva vida
+        (
+            (NuevaVidaPokemon < 1) -> (
+                actualizarPokemon([NombrePokemon, debilitado, 0, 0], PcPokemones, NuevosPokemones),
+                retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
+            );
+            (NuevaVidaPokemon > 1) -> (
+            actualizarPokemon([NombrePokemon, normal, NuevaVidaPokemon, 0], PcPokemones, NuevosPokemones),
+            retractall(pcPokemones(_)), asserta(pcPokemones(NuevosPokemones))
+            )
+        ),
+        %mostrar datos actualizados
+        pcPokemones(PcPokemonesAct),
+        indexOf(PcPokemonesAct, [_, normal, _, _], IPAct), IndiceAct is IPAct + 1,
+        getElement(PcPokemonesAct, IndiceAct, PokemonAct),
+        write("Pokemon del pc: "), write(PokemonAct),
+        random(1, 4, X),
+        elegirAtaque(X, NombrePokemon, Ataque),
+        ataque(Ataque, DanioGenerado, _), write(" Pc lanza: "), write(Ataque),
+        write(" realiza danio: "), write(DanioGenerado), nl, nl,
+        miDanioObtenido(DanioDB),
+        NuevoMiDanioObtenido is DanioDB + DanioGenerado,
+        retractall(miDanioObtenido(_)), asserta(miDanioObtenido(NuevoMiDanioObtenido))
+  ).
 
 peleaPokemonSalvaje(DanioInicial, DanioGenerado):-
     batallaTerminada(no), write("Pokemon salvaje recibe danio: "), write(DanioInicial),nl,
@@ -916,11 +1013,8 @@ peleaPokemonSalvaje(DanioInicial, DanioGenerado):-
     nombrePokemon(Pokemon, NombrePokemon),
     vidaPokemon(Pokemon, VidaPokemon),
     NuevaVidaPokemon is VidaPokemon - DanioInicial,
-    %actualizar en los pokemon con la nueva vida
-    (
-        ((NuevaVidaPokemon < 1), retractall(pokemonSalvaje(_)), asserta(pokemonSalvaje([NombrePokemon, debilitado, 0, 0])));
-        ((NuevaVidaPokemon > 1), retractall(pokemonSalvaje(_)), asserta(pcPokemones([NombrePokemon, normal, NuevaVidaPokemon, 0])))
-    ),
+    %validar que aun tenga vida
+    NuevaVidaPokemon > 0,
     %mostrar datos actualizados
     write("Pokemon Salvaje: "), write(NombrePokemon),
     random(1, 4, X),
@@ -1035,9 +1129,8 @@ caminar :-
     random(1, 6, X),
     (
         (X = 1) ->
-            inicializarSalvaje,
-            pokemonSalvaje([P | _]),
-            write("Un "), write(P), write(" salvaje ha aparecido"), nl,
+            inicializarSalvaje, 
+            write("Batalla pokemon salvaje"), nl,
             menuBatallaSalvaje;
         (X = 2) ->
             write("Batalla Entrenador"), nl,
@@ -1072,6 +1165,10 @@ replaceAll(O, R, [H|T], [H|T2]) :- H \= O, replaceAll(O, R, T, T2).
 actualizarPokemon(_, [],[]).
 actualizarPokemon([PN, ES, DN, EN], [[P, PES, PDN, EXP]|T], [[P, PES, PDN, EXP]|T2]):- PN \= P, actualizarPokemon([PN,ES, DN, EN], T, T2).
 actualizarPokemon([PN, ES, DN, EN], [[PN, _, _, _]|T], [[PN, ES, DN, EN]|T2]):- actualizarPokemon([PN,ES, DN, EN], T, T2).
+
+reemplazarEvolucion([], []).
+reemplazarEvolucion([[P, E, V, Exp]|T], [[P2, E, V, Exp]|T2]):- evolucion(P, P2, ExpN),  ((Exp > ExpN);(Exp = ExpN)), write("\n¡Tu pokemon: "), write(P), write(" evoluciona a: "), write(P2), write("!"), reemplazarEvolucion(T, T2).
+reemplazarEvolucion([[P, E, V, Exp]|T], [[P, E, V, Exp]|T2]):- reemplazarEvolucion(T, T2).
 
 indexOf([Element|_], Element, 0):- !.
 indexOf([_|Tail], Element, Index):-
@@ -1128,7 +1225,7 @@ getHuevo(Indice) :-
 
 verificarHuevo :-
     getHuevo(_),
-    write("Ya cuentas con un huevo en tu equipo").
+    write("Ya cuentas con un huevo en tu equipo"), menuHuevo.
 
 eclosionarHuevo(TipoHuevo) :-
     misPokemon(P),
